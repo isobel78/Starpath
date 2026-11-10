@@ -15,6 +15,13 @@
       "when": 1794343199284,
       "tag": "0001_settings_prior_admin_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794347504042,
+      "tag": "0002_tighten_public_reads",
+      "breakpoints": true
     }
   ]
 }

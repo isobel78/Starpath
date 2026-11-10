@@ -330,7 +330,72 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_enrollments: {
+        Row: {
+          certificate_url: string | null
+          completed_at: string | null
+          course_id: string | null
+          position: number | null
+          user_id: string | null
+        }
+        Insert: {
+          certificate_url?: string | null
+          completed_at?: string | null
+          course_id?: string | null
+          position?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          certificate_url?: string | null
+          completed_at?: string | null
+          course_id?: string | null
+          position?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      public_profiles: {
+        Row: {
+          avatar_emoji: string | null
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          current_streak: number | null
+          display_name: string | null
+          id: string | null
+          longest_streak: number | null
+          track_id: string | null
+          username: string | null
+          xp: number | null
+        }
+        Insert: {
+          avatar_emoji?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          current_streak?: number | null
+          display_name?: string | null
+          id?: string | null
+          longest_streak?: number | null
+          track_id?: string | null
+          username?: string | null
+          xp?: number | null
+        }
+        Update: {
+          avatar_emoji?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          current_streak?: number | null
+          display_name?: string | null
+          id?: string | null
+          longest_streak?: number | null
+          track_id?: string | null
+          username?: string | null
+          xp?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _award: {
@@ -365,6 +430,7 @@ export type Database = {
         Args: { _cert: string; _course: string }
         Returns: undefined
       }
+      shares_squad: { Args: { _a: string; _b: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
