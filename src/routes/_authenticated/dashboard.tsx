@@ -32,7 +32,7 @@ function Dashboard() {
     queryFn: async () => {
       const { data: c } = await supabase.from("cheers").select("*").eq("to_user", user!.id).order("created_at", { ascending: false }).limit(5);
       const ids = [...new Set((c ?? []).map((x) => x.from_user))];
-      const { data: ps } = ids.length ? await supabase.from("profiles").select("id, display_name, avatar_emoji").in("id", ids) : { data: [] };
+      const { data: ps } = ids.length ? await supabase.from("public_profiles").select("id, display_name, avatar_emoji").in("id", ids) : { data: [] };
       return (c ?? []).map((x) => ({ ...x, from: ps?.find((p) => p.id === x.from_user) }));
     },
   });

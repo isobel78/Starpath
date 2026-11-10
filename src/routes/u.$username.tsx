@@ -18,10 +18,11 @@ const getProfile = createServerFn({ method: "GET" })
       auth: { persistSession: false, autoRefreshToken: false },
       global: { fetch: (input, init) => { const h = new Headers(init?.headers); if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); } },
     });
-    const { data: p } = await sb.from("profiles").select("id, username, display_name, bio, avatar_emoji, avatar_url, xp, current_streak, longest_streak, track_id").eq("username", username).maybeSingle();
-    if (!p) return null;
-    const { data: e } = await sb.from("enrollments").select("course_id, completed_at, certificate_url").eq("user_id", p.id).order("position");
-    return { profile: p, enrollments: e ?? [] };
+    const { data: pRaw } = await sb.from("public_profiles").select("id, username, display_name, bio, avatar_emoji, avatar_url, xp, current_streak, longest_streak, track_id").eq("username", username).maybeSingle();
+    if (!pRaw?.id) return null;
+    const p = pRaw as { [K in keyof typeof pRaw]-?: NonNullable<(typeof pRaw)[K]> } & { avatar_url: string | null; track_id: string | null };
+    const { data: e } = await sb.from("public_enrollments").select("course_id, completed_at, certificate_url").eq("user_id", p.id).order("position");
+    return { profile: p, enrollments: (e ?? []).filter((r) => r.course_id) as { course_id: string; completed_at: string | null; certificate_url: string | null }[] };
   });
 
 export const Route = createFileRoute("/u/$username")({
