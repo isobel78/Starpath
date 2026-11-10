@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ExternalLink, RefreshCw } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useMyData } from "@/lib/data";
+import { useCatalog } from "@/lib/catalog-store";
 import { computePlan } from "@/lib/plan";
 import { COURSE_MAP } from "@/lib/catalog";
 
@@ -14,6 +15,7 @@ const COLORS = ["bg-primary", "bg-secondary", "bg-accent", "bg-chart-2", "bg-cha
 
 function CalendarPage() {
   const { data } = useMyData();
+  useCatalog();
   if (!data) return <AppShell><p className="animate-pulse text-center">Loading…</p></AppShell>;
   const plan = computePlan(data, 7);
   const courseColor = (id: string) => COLORS[data.enrollments.findIndex((e) => e.course_id === id) % COLORS.length];
