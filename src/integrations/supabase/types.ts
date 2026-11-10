@@ -14,13 +14,298 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      checkins: {
+        Row: {
+          created_at: string
+          day: string
+          mood: string
+          note: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day?: string
+          mood?: string
+          note?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          mood?: string
+          note?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cheers: {
+        Row: {
+          created_at: string
+          emoji: string
+          from_user: string
+          id: string
+          message: string
+          to_user: string
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string
+          from_user: string
+          id?: string
+          message?: string
+          to_user: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          from_user?: string
+          id?: string
+          message?: string
+          to_user?: string
+        }
+        Relationships: []
+      }
+      enrollments: {
+        Row: {
+          certificate_url: string | null
+          completed_at: string | null
+          course_id: string
+          created_at: string
+          id: string
+          position: number
+          user_id: string
+        }
+        Insert: {
+          certificate_url?: string | null
+          completed_at?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          position?: number
+          user_id: string
+        }
+        Update: {
+          certificate_url?: string | null
+          completed_at?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          position?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      friendships: {
+        Row: {
+          addressee: string
+          created_at: string
+          id: string
+          requester: string
+          status: string
+        }
+        Insert: {
+          addressee: string
+          created_at?: string
+          id?: string
+          requester: string
+          status?: string
+        }
+        Update: {
+          addressee?: string
+          created_at?: string
+          id?: string
+          requester?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      lesson_completions: {
+        Row: {
+          completed_on: string
+          course_id: string
+          created_at: string
+          id: string
+          minutes: number
+          unit_index: number
+          user_id: string
+        }
+        Insert: {
+          completed_on?: string
+          course_id: string
+          created_at?: string
+          id?: string
+          minutes?: number
+          unit_index: number
+          user_id: string
+        }
+        Update: {
+          completed_on?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          minutes?: number
+          unit_index?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_emoji: string
+          bio: string
+          created_at: string
+          current_streak: number
+          display_name: string
+          hours_per_week: number
+          id: string
+          last_active_date: string | null
+          longest_streak: number
+          pace_mode: string
+          target_date: string | null
+          track_id: string | null
+          username: string
+          xp: number
+        }
+        Insert: {
+          avatar_emoji?: string
+          bio?: string
+          created_at?: string
+          current_streak?: number
+          display_name?: string
+          hours_per_week?: number
+          id: string
+          last_active_date?: string | null
+          longest_streak?: number
+          pace_mode?: string
+          target_date?: string | null
+          track_id?: string | null
+          username: string
+          xp?: number
+        }
+        Update: {
+          avatar_emoji?: string
+          bio?: string
+          created_at?: string
+          current_streak?: number
+          display_name?: string
+          hours_per_week?: number
+          id?: string
+          last_active_date?: string | null
+          longest_streak?: number
+          pace_mode?: string
+          target_date?: string | null
+          track_id?: string | null
+          username?: string
+          xp?: number
+        }
+        Relationships: []
+      }
+      squad_members: {
+        Row: {
+          joined_at: string
+          squad_id: string
+          user_id: string
+        }
+        Insert: {
+          joined_at?: string
+          squad_id: string
+          user_id: string
+        }
+        Update: {
+          joined_at?: string
+          squad_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "squad_members_squad_id_fkey"
+            columns: ["squad_id"]
+            isOneToOne: false
+            referencedRelation: "squads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      squads: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          invite_code: string
+          name: string
+          owner_id: string
+          weekly_xp_goal: number
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          invite_code?: string
+          name: string
+          owner_id: string
+          weekly_xp_goal?: number
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          invite_code?: string
+          name?: string
+          owner_id?: string
+          weekly_xp_goal?: number
+        }
+        Relationships: []
+      }
+      xp_events: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      _award: {
+        Args: { _reason: string; _uid: string; _xp: number }
+        Returns: undefined
+      }
+      complete_course: {
+        Args: { _cert: string; _course: string }
+        Returns: undefined
+      }
+      complete_unit: {
+        Args: { _course: string; _minutes: number; _unit: number }
+        Returns: undefined
+      }
+      daily_checkin: {
+        Args: { _mood: string; _note: string }
+        Returns: undefined
+      }
+      is_squad_member: {
+        Args: { _squad: string; _uid: string }
+        Returns: boolean
+      }
+      join_squad: { Args: { _code: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
