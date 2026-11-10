@@ -31,13 +31,13 @@ function Index() {
   return (
     <AppShell>
       <section className="relative overflow-hidden rounded-[2rem] bg-hero px-6 py-16 text-primary-foreground shadow-glow md:px-14 md:py-24">
-        {[["top-6 right-10", "h-10 w-10"], ["bottom-10 right-1/3", "h-6 w-6"], ["top-1/3 right-1/4", "h-14 w-14"], ["bottom-6 left-8", "h-5 w-5"]].map(([pos, size], i) => (
-          <Star key={i} className={`absolute ${pos} ${size} animate-twinkle fill-star text-star drop-shadow-[0_0_12px_var(--star)]`} style={{ animationDelay: `${i * 0.5}s` }} />
+        {[["top-3 right-3 md:top-6 md:right-10", "h-6 w-6 md:h-10 md:w-10"], ["hidden md:block bottom-10 right-1/3", "h-6 w-6"], ["hidden md:block top-1/3 right-1/4", "h-14 w-14"], ["bottom-3 right-4 md:bottom-6 md:left-8 md:right-auto", "h-5 w-5"]].map(([pos, size], i) => (
+          <Star key={i} className={`pointer-events-none absolute -z-0 opacity-80 md:opacity-100 ${pos} ${size} animate-twinkle fill-star text-star drop-shadow-[0_0_12px_var(--star)]`} style={{ animationDelay: `${i * 0.5}s` }} />
         ))}
-        <p className="mb-4 inline-block rounded-full bg-background/20 px-4 py-1 text-sm font-bold">✨ Your learning, but make it sparkle</p>
-        <h1 className="max-w-3xl text-5xl font-bold leading-tight md:text-7xl">Chart your path to becoming a developer.</h1>
-        <p className="mt-6 max-w-xl text-lg opacity-90">One personal roadmap for languages, frontend, backend, databases and CS — with daily goals, streaks and friends to keep you going.</p>
-        <div className="mt-8 flex flex-wrap gap-3">
+        <p className="relative z-10 mb-4 inline-block rounded-full bg-background/20 px-4 py-1 text-sm font-bold">✨ Your learning, but make it sparkle</p>
+        <h1 className="relative z-10 max-w-3xl text-5xl font-bold leading-tight md:text-7xl">Chart your path to becoming a developer.</h1>
+        <p className="relative z-10 mt-6 max-w-xl text-lg opacity-90">One personal roadmap for languages, frontend, backend, databases and CS — with daily goals, streaks and friends to keep you going.</p>
+        <div className="relative z-10 mt-8 flex flex-wrap gap-3">
           <Button asChild size="lg" className="rounded-full bg-star text-star-foreground shadow-star hover:bg-star/90"><Link to="/auth">Start my roadmap</Link></Button>
           <Button asChild size="lg" variant="outline" className="rounded-full border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-background/20 hover:text-primary-foreground"><Link to="/catalog">Browse catalog</Link></Button>
         </div>
