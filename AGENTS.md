@@ -30,6 +30,8 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
-- Course catalog and tracks are static data in `src/lib/catalog.ts`; the DB stores only course ids. Why: providers have no shared public API.
+- Built-in courses/tracks live in `src/lib/catalog.ts`; admin edits are stored as overrides in `catalog_items` and merged in place by `useCatalog()` (pages showing courses must call it). Why: providers have no shared public API, and the admin can still curate without code changes.
+- Admin is a `user_roles` row granted by trigger to the owner's verified email; never check admin by email in client code. Why: prevents privilege escalation.
+- Uploaded avatars are stored as small 256px data URLs in `profiles.avatar_url` (workspace blocks public storage buckets). Why: public profiles need permanent image links.
 - Schedules are computed client-side from unfinished units starting today (`src/lib/schedule.ts`), never stored. Why: missed days rebalance automatically.
 - XP and streaks change only through security-definer RPCs (complete_unit, daily_checkin, complete_course); profiles' xp/streak columns are not user-updatable. Why: prevent self-awarded XP.

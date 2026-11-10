@@ -4,6 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 import { Flame, Trophy, Star, Award, ExternalLink } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { AppShell } from "@/components/AppShell";
+import { UserAvatar } from "@/components/UserAvatar";
+import { useCatalog } from "@/lib/catalog-store";
 import { COURSE_MAP, TRACKS } from "@/lib/catalog";
 import { levelFor } from "@/lib/schedule";
 import { Progress } from "@/components/ui/progress";
@@ -16,7 +18,7 @@ const getProfile = createServerFn({ method: "GET" })
       auth: { persistSession: false, autoRefreshToken: false },
       global: { fetch: (input, init) => { const h = new Headers(init?.headers); if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); } },
     });
-    const { data: p } = await sb.from("profiles").select("id, username, display_name, bio, avatar_emoji, xp, current_streak, longest_streak, track_id").eq("username", username).maybeSingle();
+    const { data: p } = await sb.from("profiles").select("id, username, display_name, bio, avatar_emoji, avatar_url, xp, current_streak, longest_streak, track_id").eq("username", username).maybeSingle();
     if (!p) return null;
     const { data: e } = await sb.from("enrollments").select("course_id, completed_at, certificate_url").eq("user_id", p.id).order("position");
     return { profile: p, enrollments: e ?? [] };
@@ -38,6 +40,7 @@ export const Route = createFileRoute("/u/$username")({
 });
 
 function ProfilePage() {
+  useCatalog();
   const { profile: p, enrollments } = Route.useLoaderData();
   const lv = levelFor(p.xp);
   const done = enrollments.filter((e) => e.completed_at);
@@ -57,7 +60,7 @@ function ProfilePage() {
     <AppShell>
       <section className="rounded-[2rem] bg-hero p-8 text-primary-foreground shadow-glow">
         <div className="flex flex-col items-center gap-5 text-center md:flex-row md:text-left">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-background/20 text-6xl">{p.avatar_emoji}</div>
+          <UserAvatar url={p.avatar_url} emoji={p.avatar_emoji} className="h-24 w-24 bg-background/20 bg-none text-6xl" />
           <div className="flex-1">
             <h1 className="text-4xl font-bold">{p.display_name}</h1>
             <p className="opacity-80">@{p.username}{track ? ` · ${track.emoji} ${track.title}` : ""}</p>

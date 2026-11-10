@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { UserPlus, Check, X, Copy, Megaphone, Crown } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/squads")({
   component: Squads,
 });
 
-type P = { id: string; username: string; display_name: string; avatar_emoji: string; current_streak: number };
+type P = { id: string; username: string; display_name: string; avatar_emoji: string; avatar_url: string | null; current_streak: number };
 
 function weekStart() { const d = new Date(); const day = (d.getDay() + 6) % 7; d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - day); return d.toISOString(); }
 
@@ -40,7 +41,7 @@ function Squads() {
       const ids = new Set<string>([uid!]);
       (fr ?? []).forEach((f) => { ids.add(f.requester); ids.add(f.addressee); });
       (sm ?? []).forEach((m) => ids.add(m.user_id));
-      const { data: ps } = await supabase.from("profiles").select("id, username, display_name, avatar_emoji, current_streak").in("id", [...ids]);
+      const { data: ps } = await supabase.from("profiles").select("id, username, display_name, avatar_emoji, avatar_url, current_streak").in("id", [...ids]);
       const xp = await weeklyXp([...ids]);
       return { friendships: fr ?? [], squads: sq ?? [], members: sm ?? [], profiles: Object.fromEntries((ps ?? []).map((p) => [p.id, p])) as Record<string, P>, xp };
     },
@@ -90,7 +91,7 @@ function Squads() {
   const Row = ({ p, right, rank }: { p: P; right: React.ReactNode; rank?: number }) => (
     <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
       {rank !== undefined && <span className={`flex h-8 w-8 items-center justify-center rounded-full font-display font-bold ${rank === 0 ? "bg-star text-star-foreground shadow-star" : "bg-muted"}`}>{rank === 0 ? <Crown className="h-4 w-4" /> : rank + 1}</span>}
-      <span className="text-3xl">{p.avatar_emoji}</span>
+      <UserAvatar url={p.avatar_url} emoji={p.avatar_emoji} className="h-10 w-10 text-2xl" />
       <Link to="/u/$username" params={{ username: p.username }} className="min-w-0 flex-1"><div className="font-semibold">{p.display_name}{p.id === uid && " (you)"}</div><div className="text-xs text-muted-foreground">@{p.username} · 🔥{p.current_streak}</div></Link>
       {right}
     </div>
