@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      catalog_items: {
+        Row: {
+          data: Json
+          hidden: boolean
+          id: string
+          kind: string
+          updated_at: string
+        }
+        Insert: {
+          data?: Json
+          hidden?: boolean
+          id: string
+          kind: string
+          updated_at?: string
+        }
+        Update: {
+          data?: Json
+          hidden?: boolean
+          id?: string
+          kind?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       checkins: {
         Row: {
           created_at: string
@@ -73,6 +97,7 @@ export type Database = {
           created_at: string
           id: string
           position: number
+          prior: boolean
           user_id: string
         }
         Insert: {
@@ -82,6 +107,7 @@ export type Database = {
           created_at?: string
           id?: string
           position?: number
+          prior?: boolean
           user_id: string
         }
         Update: {
@@ -91,6 +117,7 @@ export type Database = {
           created_at?: string
           id?: string
           position?: number
+          prior?: boolean
           user_id?: string
         }
         Relationships: []
@@ -152,6 +179,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_emoji: string
+          avatar_url: string | null
           bio: string
           created_at: string
           current_streak: number
@@ -168,6 +196,7 @@ export type Database = {
         }
         Insert: {
           avatar_emoji?: string
+          avatar_url?: string | null
           bio?: string
           created_at?: string
           current_streak?: number
@@ -184,6 +213,7 @@ export type Database = {
         }
         Update: {
           avatar_emoji?: string
+          avatar_url?: string | null
           bio?: string
           created_at?: string
           current_streak?: number
@@ -256,6 +286,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       xp_events: {
         Row: {
           amount: number
@@ -301,14 +349,25 @@ export type Database = {
         Args: { _mood: string; _note: string }
         Returns: undefined
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_squad_member: {
         Args: { _squad: string; _uid: string }
         Returns: boolean
       }
       join_squad: { Args: { _code: string }; Returns: string }
+      mark_prior_completion: {
+        Args: { _cert: string; _course: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -435,6 +494,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
