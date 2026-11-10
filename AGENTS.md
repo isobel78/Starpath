@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- Course catalog and tracks are static data in `src/lib/catalog.ts`; the DB stores only course ids. Why: providers have no shared public API.
+- Schedules are computed client-side from unfinished units starting today (`src/lib/schedule.ts`), never stored. Why: missed days rebalance automatically.
+- XP and streaks change only through security-definer RPCs (complete_unit, daily_checkin, complete_course); profiles' xp/streak columns are not user-updatable. Why: prevent self-awarded XP.
