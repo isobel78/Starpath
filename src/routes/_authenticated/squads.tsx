@@ -59,7 +59,7 @@ function Squads() {
 
   const addFriend = async () => {
     const { data: p } = await supabase.from("public_profiles").select("id").eq("username", search.trim().toLowerCase().replace(/^@/, "")).maybeSingle();
-    if (!p) { toast.error("No learner with that username"); return; }
+    if (!p?.id) { toast.error("No learner with that username"); return; }
     if (p.id === uid) { toast.error("That's you! 😄"); return; }
     const { error } = await supabase.from("friendships").insert({ requester: uid, addressee: p.id });
     if (error) { toast.error(error.message.includes("duplicate") ? "Request already sent" : error.message); return; }
