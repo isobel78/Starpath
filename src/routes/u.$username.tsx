@@ -18,9 +18,9 @@ const getProfile = createServerFn({ method: "GET" })
       auth: { persistSession: false, autoRefreshToken: false },
       global: { fetch: (input, init) => { const h = new Headers(init?.headers); if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); } },
     });
-    const { data: p } = await sb.from("profiles").select("id, username, display_name, bio, avatar_emoji, avatar_url, xp, current_streak, longest_streak, track_id").eq("username", username).maybeSingle();
+    const { data: p } = await sb.from("public_profiles").select("id, username, display_name, bio, avatar_emoji, avatar_url, xp, current_streak, longest_streak, track_id").eq("username", username).maybeSingle();
     if (!p) return null;
-    const { data: e } = await sb.from("enrollments").select("course_id, completed_at, certificate_url").eq("user_id", p.id).order("position");
+    const { data: e } = await sb.from("public_enrollments").select("course_id, completed_at, certificate_url").eq("user_id", p.id).order("position");
     return { profile: p, enrollments: e ?? [] };
   });
 

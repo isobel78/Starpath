@@ -41,7 +41,7 @@ function Squads() {
       const ids = new Set<string>([uid!]);
       (fr ?? []).forEach((f) => { ids.add(f.requester); ids.add(f.addressee); });
       (sm ?? []).forEach((m) => ids.add(m.user_id));
-      const { data: ps } = await supabase.from("profiles").select("id, username, display_name, avatar_emoji, avatar_url, current_streak").in("id", [...ids]);
+      const { data: ps } = await supabase.from("public_profiles").select("id, username, display_name, avatar_emoji, avatar_url, current_streak").in("id", [...ids]);
       const xp = await weeklyXp([...ids]);
       return { friendships: fr ?? [], squads: sq ?? [], members: sm ?? [], profiles: Object.fromEntries((ps ?? []).map((p) => [p.id, p])) as Record<string, P>, xp };
     },
@@ -58,7 +58,7 @@ function Squads() {
   const board = [uid, ...friends].map((id) => ({ p: profiles[id], xp: xp[id] ?? 0 })).filter((x): x is { p: P; xp: number } => !!x.p).sort((a, b) => b.xp - a.xp);
 
   const addFriend = async () => {
-    const { data: p } = await supabase.from("profiles").select("id").eq("username", search.trim().toLowerCase().replace(/^@/, "")).maybeSingle();
+    const { data: p } = await supabase.from("public_profiles").select("id").eq("username", search.trim().toLowerCase().replace(/^@/, "")).maybeSingle();
     if (!p) { toast.error("No learner with that username"); return; }
     if (p.id === uid) { toast.error("That's you! 😄"); return; }
     const { error } = await supabase.from("friendships").insert({ requester: uid, addressee: p.id });
