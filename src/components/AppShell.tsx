@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Home, Map, CalendarDays, Library, Users, Star, LogOut } from "lucide-react";
+import { Home, Map, CalendarDays, Library, Users, Star, LogOut, Settings, Shield } from "lucide-react";
+import { useIsAdmin } from "@/lib/catalog-store";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/data";
@@ -16,6 +17,7 @@ const NAV = [
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useUser();
   const navigate = useNavigate();
+  const isAdmin = useIsAdmin(user?.id);
   return (
     <div className="min-h-screen pb-24 md:pb-0">
       <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
@@ -33,9 +35,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             ))}
           </nav>
           {user ? (
+            <div className="flex items-center">
+            {isAdmin && <Button asChild variant="ghost" size="sm"><Link to="/admin" aria-label="Admin"><Shield className="h-4 w-4" /> <span className="hidden sm:inline">Admin</span></Link></Button>}
+            <Button asChild variant="ghost" size="sm"><Link to="/settings" aria-label="Settings"><Settings className="h-4 w-4" /> <span className="hidden sm:inline">Settings</span></Link></Button>
             <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/" }); }}>
               <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">Sign out</span>
             </Button>
+            </div>
           ) : (
             <Button asChild size="sm" className="rounded-full"><Link to="/auth">Sign in</Link></Button>
           )}
