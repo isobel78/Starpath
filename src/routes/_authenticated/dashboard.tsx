@@ -101,7 +101,7 @@ function Dashboard() {
         </div>
         {data.enrollments.length === 0 ? (
           <div className="mt-4 rounded-3xl border-2 border-dashed border-border p-8 text-center">
-            <p className="text-lg">Your roadmap is empty!</p>
+            <p className="text-lg">Your Starpath is empty!</p>
             <Button asChild className="mt-3 rounded-full"><Link to="/roadmap">Pick a career track</Link></Button>
           </div>
         ) : (

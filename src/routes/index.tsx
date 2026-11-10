@@ -7,9 +7,9 @@ import { TRACKS } from "@/lib/catalog";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Starpath — Build your coding learning roadmap" },
+      { title: "Starpath — Build your coding learning Starpath" },
       { name: "description", content: "Mix courses from boot.dev, freeCodeCamp, Exercism, The Odin Project, CS50 and Roadmap.sh into one glowing, gamified study plan." },
-      { property: "og:title", content: "Starpath — Build your coding learning roadmap" },
+      { property: "og:title", content: "Starpath — Build your coding learning Starpath" },
       { property: "og:description", content: "Career tracks, smart scheduling, streaks, XP and study squads." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -36,9 +36,9 @@ function Index() {
         ))}
         <p className="relative z-10 mb-4 inline-block rounded-full bg-background/20 px-4 py-1 text-sm font-bold">✨ Learning, but make it sparkle ✨</p>
         <h1 className="relative z-10 max-w-3xl text-5xl font-bold leading-tight md:text-7xl">Chart your path to becoming a developer.</h1>
-        <p className="relative z-10 mt-6 max-w-xl text-lg opacity-90">One personal roadmap for languages, frontend, backend, databases and CS — with daily goals, streaks and friends to keep you going.</p>
+        <p className="relative z-10 mt-6 max-w-xl text-lg opacity-90">One personal Starpath for languages, frontend, backend, databases and CS — with daily goals, streaks and friends to keep you going.</p>
         <div className="relative z-10 mt-8 flex flex-wrap gap-3">
-          <Button asChild size="lg" className="rounded-full bg-star text-star-foreground shadow-star hover:bg-star/90"><Link to="/auth">Start my roadmap</Link></Button>
+          <Button asChild size="lg" className="rounded-full bg-star text-star-foreground shadow-star hover:bg-star/90"><Link to="/auth">Start my Starpath</Link></Button>
           <Button asChild size="lg" variant="outline" className="rounded-full border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-background/20 hover:text-primary-foreground"><Link to="/catalog">Browse catalog</Link></Button>
         </div>
       </section>
