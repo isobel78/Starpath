@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCatalog } from "@/lib/catalog-store";
 
 export const Route = createFileRoute("/_authenticated/roadmap")({
-  head: () => ({ meta: [{ title: "My roadmap — Starpath" }, { name: "description", content: "Pick a career track or build your own course playlist." }, { property: "og:title", content: "My roadmap — Starpath" }, { property: "og:description", content: "Pick a career track or build your own course playlist." }] }),
+  head: () => ({ meta: [{ title: "My Starpath" }, { name: "description", content: "Pick a career track or build your own course playlist." }, { property: "og:title", content: "My Starpath" }, { property: "og:description", content: "Pick a career track or build your own course playlist." }] }),
   component: Roadmap,
 });
 
@@ -85,11 +85,11 @@ function Roadmap() {
 
   return (
     <AppShell>
-      <h1 className="text-4xl font-bold">My <span className="text-gradient">roadmap</span></h1>
+      <h1 className="text-4xl font-bold">My <span className="text-gradient">Starpath</span></h1>
 
       <section className="mt-6">
         <h2 className="text-xl font-bold">Browse career tracks</h2>
-        <p className="text-sm text-muted-foreground">Tap a track to peek at its courses. Nothing is added until you press Start learning.</p>
+        <p className="text-sm text-muted-foreground">Tap a track to peek at its courses. Nothing is added until you press Blast off.</p>
         <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
           {TRACKS.map((t) => (
             <button key={t.id} onClick={() => setPreview(preview === t.id ? null : t.id)} aria-pressed={preview === t.id} className={`min-w-56 rounded-3xl border p-4 text-left transition hover:-translate-y-1 hover:shadow-glow ${preview === t.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}>
@@ -127,7 +127,7 @@ function Roadmap() {
             {(["hours", "date"] as const).map((m) => <button key={m} onClick={() => setMode(m)} className={`rounded-full px-4 py-2 text-sm font-bold ${mode === m ? "bg-primary text-primary-foreground" : ""}`}>{m === "hours" ? "Hours / week" : "Finish by date"}</button>)}
           </div>
           {mode === "hours" ? <Input type="number" min={1} max={80} className="w-28 bg-card" value={hours} onChange={(e) => setHours(e.target.value)} /> : <Input type="date" className="w-44 bg-card" value={date} onChange={(e) => setDate(e.target.value)} />}
-          {track ? <Button onClick={startLearning} disabled={busy} size="lg" className="rounded-full shadow-glow">Start learning! ✨</Button> : <Button onClick={savePace} className="rounded-full">Save</Button>}
+          {track ? <Button onClick={startLearning} disabled={busy} size="lg" className="rounded-full shadow-glow">Blast off! 🚀</Button> : <Button onClick={savePace} className="rounded-full">Save</Button>}
         </div>
         <p className="mt-3 text-sm">≈ <b>{plan.perDay} min/day</b> · {Math.round(plan.remainingMinutes / 60)}h remaining · estimated finish <b>{plan.finish.toLocaleDateString()}</b></p>
       </section>

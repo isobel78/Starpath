@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 const NAV = [
   { to: "/dashboard", label: "Today", icon: Home },
-  { to: "/roadmap", label: "Roadmap", icon: Map },
+  { to: "/roadmap", label: "Starpath", icon: Map },
   { to: "/calendar", label: "Week", icon: CalendarDays },
   { to: "/catalog", label: "Catalog", icon: Library },
   { to: "/squads", label: "Squads", icon: Users },
