@@ -46,13 +46,13 @@ function Dashboard() {
 
   const complete = async (courseId: string, index: number, minutes: number) => {
     const { error } = await supabase.rpc("complete_unit", { _course: courseId, _unit: index, _minutes: minutes });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(`+${10 + Math.floor(minutes / 6)} XP! Lesson done ⭐`);
     refresh();
   };
   const checkin = async () => {
     const { error } = await supabase.rpc("daily_checkin", { _mood: mood, _note: "" });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Checked in! +5 XP 🔥");
     refresh();
   };
@@ -143,9 +143,9 @@ function EditProfile({ profile, onSaved }: { profile: { id: string; username: st
   useEffect(() => setF(profile), [profile]);
   const save = async () => {
     const username = f.username.toLowerCase().replace(/[^a-z0-9_]/g, "");
-    if (username.length < 3) return toast.error("Username needs 3+ letters or numbers");
+    if (username.length < 3) { toast.error("Username needs 3+ letters or numbers"); return; }
     const { error } = await supabase.from("profiles").update({ username, display_name: f.display_name.slice(0, 40), bio: f.bio.slice(0, 200), avatar_emoji: f.avatar_emoji }).eq("id", profile.id);
-    if (error) return toast.error(error.message.includes("unique") ? "That username is taken" : error.message);
+    if (error) { toast.error(error.message.includes("unique") ? "That username is taken" : error.message); return; }
     toast.success("Profile saved"); setOpen(false); onSaved();
   };
   return (

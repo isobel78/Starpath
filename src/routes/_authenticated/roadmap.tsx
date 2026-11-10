@@ -43,12 +43,12 @@ function Roadmap() {
     const t = TRACKS.find((x) => x.id === trackId)!;
     const merged = orderByPrereqs([...new Set([...ids, ...t.courses])]);
     const rows = merged.filter((c) => !ids.includes(c)).map((c) => ({ user_id: user.id, course_id: c, position: merged.indexOf(c) }));
-    if (rows.length) { const { error } = await supabase.from("enrollments").insert(rows); if (error) return toast.error(error.message); }
+    if (rows.length) { const { error } = await supabase.from("enrollments").insert(rows); if (error) { toast.error(error.message); return; } }
     await supabase.from("profiles").update({ track_id: trackId }).eq("id", user.id);
     await savePositions(merged);
     toast.success(`${t.emoji} ${t.title} added!`);
   };
-  const move = (i: number, d: number) => { const o = [...ids]; const j = i + d; if (j < 0 || j >= o.length) return; [o[i], o[j]] = [o[j], o[i]]; savePositions(o); };
+  const move = (i: number, d: number) => { const o = [...ids]; const j = i + d; if (j < 0 || j >= o.length) return; [o[i], o[j]] = [o[j]!, o[i]!]; savePositions(o); };
   const remove = async (cid: string) => { await supabase.from("enrollments").delete().eq("user_id", user.id).eq("course_id", cid); refresh(); };
   const addMissing = async () => {
     const merged = orderByPrereqs([...missing, ...ids]);
@@ -57,9 +57,9 @@ function Roadmap() {
     toast.success("Prerequisites added in the right order");
   };
   const savePace = async () => {
-    if (mode === "date" && !date) return toast.error("Pick a target date");
+    if (mode === "date" && !date) { toast.error("Pick a target date"); return; }
     const { error } = await supabase.from("profiles").update({ pace_mode: mode, hours_per_week: Math.max(1, Math.min(80, Number(hours) || 7)), target_date: date || null }).eq("id", user.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Schedule updated"); refresh();
   };
 
@@ -138,9 +138,9 @@ function CertDialog({ courseId, current, done, onSaved }: { courseId: string; cu
   const [url, setUrl] = useState(current ?? "");
   const [open, setOpen] = useState(false);
   const save = async () => {
-    if (url && !/^https:\/\/\S+$/.test(url)) return toast.error("Use a full https:// link");
+    if (url && !/^https:\/\/\S+$/.test(url)) { toast.error("Use a full https:// link"); return; }
     const { error } = await supabase.rpc("complete_course", { _course: courseId, _cert: url });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(done ? "Certificate saved" : "Course complete! +100 XP 🎓"); setOpen(false); onSaved();
   };
   return (

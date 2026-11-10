@@ -54,14 +54,14 @@ function Squads() {
   const friends = friendships.filter((f) => f.status === "accepted").map((f) => (f.requester === uid ? f.addressee : f.requester));
   const incoming = friendships.filter((f) => f.status === "pending" && f.addressee === uid);
   const outgoing = friendships.filter((f) => f.status === "pending" && f.requester === uid);
-  const board = [uid, ...friends].map((id) => ({ p: profiles[id], xp: xp[id] ?? 0 })).filter((x) => x.p).sort((a, b) => b.xp - a.xp);
+  const board = [uid, ...friends].map((id) => ({ p: profiles[id], xp: xp[id] ?? 0 })).filter((x): x is { p: P; xp: number } => !!x.p).sort((a, b) => b.xp - a.xp);
 
   const addFriend = async () => {
     const { data: p } = await supabase.from("profiles").select("id").eq("username", search.trim().toLowerCase().replace(/^@/, "")).maybeSingle();
-    if (!p) return toast.error("No learner with that username");
-    if (p.id === uid) return toast.error("That's you! 😄");
+    if (!p) { toast.error("No learner with that username"); return; }
+    if (p.id === uid) { toast.error("That's you! 😄"); return; }
     const { error } = await supabase.from("friendships").insert({ requester: uid, addressee: p.id });
-    if (error) return toast.error(error.message.includes("duplicate") ? "Request already sent" : error.message);
+    if (error) { toast.error(error.message.includes("duplicate") ? "Request already sent" : error.message); return; }
     toast.success("Friend request sent"); setSearch(""); reload();
   };
   const respond = async (id: string, accept: boolean) => {
@@ -71,18 +71,18 @@ function Squads() {
   };
   const cheer = async (to: string, emoji: string, message: string) => {
     const { error } = await supabase.from("cheers").insert({ from_user: uid, to_user: to, emoji, message });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(`${emoji} Cheer sent!`);
   };
   const createSquad = async () => {
     if (!squadName.trim()) return;
     const { error } = await supabase.from("squads").insert({ name: squadName.trim().slice(0, 40), owner_id: uid });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setSquadName(""); toast.success("Squad created!"); reload();
   };
   const join = async () => {
     const { error } = await supabase.rpc("join_squad", { _code: code });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setCode(""); toast.success("Joined squad!"); reload();
   };
   const setGoal = async (id: string, goal: number) => { await supabase.from("squads").update({ weekly_xp_goal: Math.max(50, goal) }).eq("id", id); reload(); };
@@ -115,9 +115,9 @@ function Squads() {
 
         <TabsContent value="friends" className="mt-4 space-y-4">
           <div className="flex gap-2"><Input placeholder="Add by username" value={search} onChange={(e) => setSearch(e.target.value)} className="rounded-full" /><Button onClick={addFriend} className="rounded-full"><UserPlus className="h-4 w-4" /> Add</Button></div>
-          {incoming.length > 0 && <div className="space-y-2"><h3 className="font-bold">Requests</h3>{incoming.map((f) => profiles[f.requester] && <Row key={f.id} p={profiles[f.requester]} right={<><Button size="icon" aria-label="Accept" onClick={() => respond(f.id, true)}><Check className="h-4 w-4" /></Button><Button size="icon" variant="ghost" aria-label="Decline" onClick={() => respond(f.id, false)}><X className="h-4 w-4" /></Button></>} />)}</div>}
+          {incoming.length > 0 && <div className="space-y-2"><h3 className="font-bold">Requests</h3>{incoming.map((f) => profiles[f.requester] && <Row key={f.id} p={profiles[f.requester]!} right={<><Button size="icon" aria-label="Accept" onClick={() => respond(f.id, true)}><Check className="h-4 w-4" /></Button><Button size="icon" variant="ghost" aria-label="Decline" onClick={() => respond(f.id, false)}><X className="h-4 w-4" /></Button></>} />)}</div>}
           {outgoing.length > 0 && <p className="text-sm text-muted-foreground">Pending: {outgoing.map((f) => "@" + (profiles[f.addressee]?.username ?? "?")).join(", ")}</p>}
-          <div className="space-y-2">{friends.length === 0 ? <p className="text-muted-foreground">No friends yet — share your username!</p> : friends.map((id) => profiles[id] && <Row key={id} p={profiles[id]} right={<CheerBtns to={id} />} />)}</div>
+          <div className="space-y-2">{friends.length === 0 ? <p className="text-muted-foreground">No friends yet — share your username!</p> : friends.map((id) => profiles[id] && <Row key={id} p={profiles[id]!} right={<CheerBtns to={id} />} />)}</div>
         </TabsContent>
 
         <TabsContent value="squads" className="mt-4 space-y-4">
@@ -138,7 +138,7 @@ function Squads() {
                 <div className="mt-3 flex items-center justify-between text-sm font-semibold"><span>Weekly goal: {total} / {s.weekly_xp_goal} XP</span>{s.owner_id === uid && <Input type="number" defaultValue={s.weekly_xp_goal} onBlur={(e) => setGoal(s.id, Number(e.target.value))} className="h-8 w-24 bg-card" aria-label="Weekly goal" />}</div>
                 <Progress value={Math.min(100, (total / s.weekly_xp_goal) * 100)} className="mt-2 h-3" />
                 {total >= s.weekly_xp_goal && <p className="mt-2 font-bold text-primary">🌟 Goal smashed this week!</p>}
-                <div className="mt-4 space-y-2">{ms.map((id, i) => <Row key={id} p={profiles[id]} rank={i} right={<><span className="font-bold text-primary">{xp[id] ?? 0} XP</span><CheerBtns to={id} /></>} />)}</div>
+                <div className="mt-4 space-y-2">{ms.map((id, i) => <Row key={id} p={profiles[id]!} rank={i} right={<><span className="font-bold text-primary">{xp[id] ?? 0} XP</span><CheerBtns to={id} /></>} />)}</div>
               </div>
             );
           })}

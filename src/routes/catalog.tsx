@@ -40,9 +40,9 @@ function Catalog() {
   const list = useMemo(() => COURSES.filter((c) => (!prov || c.provider === prov) && (!area || c.area === area) && (c.title + c.blurb).toLowerCase().includes(q.toLowerCase())), [q, prov, area]);
 
   const add = async (id: string) => {
-    if (!user) return toast("Sign in to build your roadmap");
+    if (!user) { toast("Sign in to build your roadmap"); return; }
     const { error } = await supabase.from("enrollments").insert({ user_id: user.id, course_id: id, position: (data?.enrollments.length ?? 0) });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Added to your roadmap 🚀");
     refresh();
   };

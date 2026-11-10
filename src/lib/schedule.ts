@@ -69,9 +69,9 @@ export function buildSchedule(remaining: Unit[], perDay: number, today: Date, da
   for (let d = 0; d < days; d++) {
     const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d);
     const day: DayPlan = { date, units: [], minutes: 0 };
-    while (i < remaining.length && (day.units.length === 0 || day.minutes + remaining[i].minutes <= perDay)) {
-      day.units.push(remaining[i]);
-      day.minutes += remaining[i].minutes;
+    while (i < remaining.length && (day.units.length === 0 || day.minutes + remaining[i]!.minutes <= perDay)) {
+      day.units.push(remaining[i]!);
+      day.minutes += remaining[i]!.minutes;
       i++;
       if (day.minutes >= perDay) break;
     }
