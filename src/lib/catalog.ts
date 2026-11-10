@@ -1,5 +1,7 @@
-export type Provider = "boot.dev" | "freeCodeCamp" | "Exercism" | "The Odin Project" | "CS50" | "Roadmap.sh";
-export type Area = "Languages" | "Frontend" | "Backend" | "Databases" | "CS Fundamentals" | "DevOps";
+export const KNOWN_PROVIDERS = ["boot.dev", "freeCodeCamp", "Exercism", "The Odin Project", "CS50", "Roadmap.sh"];
+export const KNOWN_AREAS = ["Languages", "Frontend", "Backend", "Databases", "CS Fundamentals", "DevOps"];
+export type Provider = string;
+export type Area = string;
 
 export interface Course {
   id: string;
@@ -11,9 +13,10 @@ export interface Course {
   prereqs: string[];
   units: string[];
   blurb: string;
+  tags?: string[];
 }
 
-export const PROVIDER_COLORS: Record<Provider, string> = {
+export const PROVIDER_COLORS: Record<string, string> = {
   "boot.dev": "bg-chart-1",
   freeCodeCamp: "bg-chart-2",
   Exercism: "bg-chart-3",
@@ -29,7 +32,7 @@ export const COURSES: Course[] = [
   c({ id: "cs50p", title: "CS50P: Programming with Python", provider: "CS50", area: "Languages", hours: 60, url: "https://cs50.harvard.edu/python/", prereqs: [], blurb: "Learn Python from functions to OOP with problem sets.", units: ["Functions & Variables", "Conditionals", "Loops", "Exceptions", "Libraries", "Unit Tests", "File I/O", "Regular Expressions", "Object-Oriented Programming", "Final Project"] }),
   c({ id: "cs50w", title: "CS50W: Web Programming with Python & JS", provider: "CS50", area: "Backend", hours: 80, url: "https://cs50.harvard.edu/web/", prereqs: ["cs50x"], blurb: "Django, JavaScript, SQL, testing and scalability.", units: ["HTML & CSS", "Git", "Python", "Django", "SQL, Models & Migrations", "JavaScript", "User Interfaces", "Testing & CI/CD", "Scalability & Security", "Capstone"] }),
   c({ id: "cs50sql", title: "CS50 SQL: Databases with SQL", provider: "CS50", area: "Databases", hours: 40, url: "https://cs50.harvard.edu/sql/", prereqs: [], blurb: "Design, query and optimize relational databases.", units: ["Querying", "Relating", "Designing", "Writing", "Viewing", "Optimizing", "Scaling", "Final Project"] }),
-  c({ id: "fcc-rwd", title: "Responsive Web Design", provider: "freeCodeCamp", area: "Frontend", hours: 300, url: "https://www.freecodecamp.org/learn/2022/responsive-web-design/", prereqs: [], blurb: "HTML, CSS, flexbox, grid and accessibility through projects.", units: ["Learn HTML by Building a Cat Photo App", "Learn Basic CSS by Building a Cafe Menu", "CSS Colors", "HTML Forms", "The Box Model", "CSS Flexbox", "Typography", "Accessibility", "CSS Grid", "Responsive Design", "Certification Projects"] }),
+  c({ id: "fcc-rwd", title: "Responsive Web Design", provider: "freeCodeCamp", area: "Frontend", hours: 300, url: "https://www.freecodecamp.org/learn/responsive-web-design-v9/", prereqs: [], blurb: "HTML, CSS, flexbox, grid and accessibility through projects.", units: ["Learn HTML by Building a Cat Photo App", "Learn Basic CSS by Building a Cafe Menu", "CSS Colors", "HTML Forms", "The Box Model", "CSS Flexbox", "Typography", "Accessibility", "CSS Grid", "Responsive Design", "Certification Projects"] }),
   c({ id: "fcc-js", title: "JavaScript Algorithms & Data Structures", provider: "freeCodeCamp", area: "Languages", hours: 300, url: "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures-v8/", prereqs: ["fcc-rwd"], blurb: "Core JavaScript, algorithmic thinking and OOP.", units: ["Basic JavaScript", "Arrays & Loops", "Objects", "Functions", "Regular Expressions", "Debugging", "Data Structures", "Algorithm Scripting", "OOP", "Functional Programming", "Certification Projects"] }),
   c({ id: "fcc-fe", title: "Front End Development Libraries", provider: "freeCodeCamp", area: "Frontend", hours: 300, url: "https://www.freecodecamp.org/learn/front-end-development-libraries/", prereqs: ["fcc-js"], blurb: "Bootstrap, jQuery, Sass, React and Redux.", units: ["Bootstrap", "jQuery", "Sass", "React", "Redux", "React & Redux", "Certification Projects"] }),
   c({ id: "fcc-be", title: "Back End Development and APIs", provider: "freeCodeCamp", area: "Backend", hours: 300, url: "https://www.freecodecamp.org/learn/back-end-development-and-apis/", prereqs: ["fcc-js"], blurb: "Node.js, npm, Express and MongoDB.", units: ["Managing Packages with npm", "Basic Node and Express", "MongoDB and Mongoose", "Certification Projects"] }),
@@ -59,6 +62,7 @@ export const COURSES: Course[] = [
 ];
 
 export const COURSE_MAP = Object.fromEntries(COURSES.map((x) => [x.id, x])) as Record<string, Course>;
+export const BASE_COURSES: Course[] = [...COURSES];
 
 export interface Track { id: string; title: string; emoji: string; description: string; courses: string[] }
 
@@ -69,3 +73,23 @@ export const TRACKS: Track[] = [
   { id: "cs", title: "Computer Science", emoji: "🧠", description: "Algorithms, data structures and systems from first principles.", courses: ["cs50x", "boot-python", "boot-oop", "boot-dsa", "cs50sql", "rm-cs"] },
   { id: "data", title: "Database Pro", emoji: "🗄️", description: "SQL, PostgreSQL and data modeling mastery.", courses: ["boot-sql", "cs50sql", "fcc-rdb", "rm-postgres"] },
 ];
+
+export const BASE_TRACKS: Track[] = TRACKS.map((t) => ({ ...t }));
+
+export interface CatalogRow { kind: string; id: string; data: unknown; hidden: boolean }
+
+/** Rebuild COURSES / COURSE_MAP / TRACKS in place: built-in list + admin edits stored in the database. */
+export function applyCatalogRows(rows: CatalogRow[]) {
+  const merge = <T extends { id: string }>(base: T[], kind: string) => {
+    const out = new Map(base.map((x) => [x.id, x]));
+    for (const r of rows.filter((x) => x.kind === kind)) {
+      if (r.hidden) { out.delete(r.id); continue; }
+      out.set(r.id, { ...(out.get(r.id) ?? {}), ...(r.data as object), id: r.id } as T);
+    }
+    return [...out.values()];
+  };
+  COURSES.splice(0, COURSES.length, ...merge(BASE_COURSES, "course"));
+  for (const k of Object.keys(COURSE_MAP)) delete COURSE_MAP[k];
+  for (const c of COURSES) COURSE_MAP[c.id] = c;
+  TRACKS.splice(0, TRACKS.length, ...merge(BASE_TRACKS, "track"));
+}
