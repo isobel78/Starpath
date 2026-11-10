@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Flame, Star, ExternalLink, Check, Clock, Pencil, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { UserAvatar } from "@/components/UserAvatar";
+import { useCatalog } from "@/lib/catalog-store";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -24,6 +26,7 @@ const MOODS = ["🤩", "🙂", "😐", "😴", "🔥"];
 
 function Dashboard() {
   const { data, user, isLoading } = useMyData();
+  useCatalog();
   const refresh = useRefreshMe();
   const [mood, setMood] = useState("🙂");
   const cheers = useQuery({
@@ -61,13 +64,13 @@ function Dashboard() {
     <AppShell>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="text-5xl">{profile.avatar_emoji}</span>
+          <UserAvatar url={profile.avatar_url} emoji={profile.avatar_emoji} className="h-16 w-16 text-4xl" />
           <div>
             <h1 className="text-3xl font-bold">Hey {profile.display_name}!</h1>
             <Link to="/u/$username" params={{ username: profile.username }} className="text-sm font-semibold text-primary">View public profile @{profile.username}</Link>
           </div>
         </div>
-        <EditProfile profile={profile} onSaved={refresh} />
+        <Button asChild variant="outline" className="rounded-full"><Link to="/settings"><Pencil className="h-4 w-4" /> Edit profile</Link></Button>
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -134,31 +137,5 @@ function Dashboard() {
         </section>
       )}
     </AppShell>
-  );
-}
-
-function EditProfile({ profile, onSaved }: { profile: { id: string; username: string; display_name: string; bio: string; avatar_emoji: string }; onSaved: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [f, setF] = useState(profile);
-  useEffect(() => setF(profile), [profile]);
-  const save = async () => {
-    const username = f.username.toLowerCase().replace(/[^a-z0-9_]/g, "");
-    if (username.length < 3) { toast.error("Username needs 3+ letters or numbers"); return; }
-    const { error } = await supabase.from("profiles").update({ username, display_name: f.display_name.slice(0, 40), bio: f.bio.slice(0, 200), avatar_emoji: f.avatar_emoji }).eq("id", profile.id);
-    if (error) { toast.error(error.message.includes("unique") ? "That username is taken" : error.message); return; }
-    toast.success("Profile saved"); setOpen(false); onSaved();
-  };
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button variant="outline" className="rounded-full"><Pencil className="h-4 w-4" /> Edit profile</Button></DialogTrigger>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Edit profile</DialogTitle></DialogHeader>
-        <div className="flex flex-wrap gap-2">{["🚀", "🦄", "🐱", "🦊", "🐙", "🌈", "👾", "🧙", "🐉", "🌸"].map((e) => <button key={e} onClick={() => setF({ ...f, avatar_emoji: e })} className={`rounded-full p-2 text-2xl ${f.avatar_emoji === e ? "bg-star" : "bg-muted"}`}>{e}</button>)}</div>
-        <Input value={f.display_name} onChange={(e) => setF({ ...f, display_name: e.target.value })} placeholder="Display name" />
-        <Input value={f.username} onChange={(e) => setF({ ...f, username: e.target.value })} placeholder="username" />
-        <Textarea value={f.bio} onChange={(e) => setF({ ...f, bio: e.target.value })} placeholder="Short bio" />
-        <Button onClick={save} className="rounded-full">Save</Button>
-      </DialogContent>
-    </Dialog>
   );
 }
