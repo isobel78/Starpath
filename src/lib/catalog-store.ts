@@ -3,9 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { applyCatalogRows, type CatalogRow } from "./catalog";
 
 /** Loads admin catalog edits and applies them to the shared course list. Call in any page that shows courses. */
-export function useCatalog() {
-  const q = useQuery({
-    queryKey: ["catalog"],
+export const catalogQuery = {
+    queryKey: ["catalog"] as const,
     staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("catalog_items").select("kind, id, data, hidden");
@@ -14,8 +13,9 @@ export function useCatalog() {
       applyCatalogRows(rows);
       return rows;
     },
-  });
-  return q.dataUpdatedAt;
+};
+export function useCatalog() {
+  return useQuery(catalogQuery).dataUpdatedAt;
 }
 
 export function useIsAdmin(uid: string | undefined) {
