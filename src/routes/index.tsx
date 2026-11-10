@@ -7,9 +7,9 @@ import { TRACKS } from "@/lib/catalog";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Starpath — Build your coding learning Starpath" },
+      { title: "Starpath — Build Your Learning Roadmap" },
       { name: "description", content: "Mix courses from boot.dev, freeCodeCamp, Exercism, The Odin Project, CS50 and Roadmap.sh into one glowing, gamified study plan." },
-      { property: "og:title", content: "Starpath — Build your coding learning Starpath" },
+      { property: "og:title", content: "Starpath — Build Your Learning Roadmap" },
       { property: "og:description", content: "Career tracks, smart scheduling, streaks, XP and study squads." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
