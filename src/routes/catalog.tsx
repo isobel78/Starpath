@@ -45,10 +45,10 @@ function Catalog() {
   const list = useMemo(() => COURSES.filter((c) => (!prov || c.provider === prov) && (!area || c.area === area) && (c.title + c.blurb + (c.tags ?? []).join(" ")).toLowerCase().includes(q.toLowerCase())), [q, prov, area, version]);
 
   const add = async (id: string) => {
-    if (!user) { toast("Sign in to build your roadmap"); return; }
+    if (!user) { toast("Sign in to build your Starpath"); return; }
     const { error } = await supabase.from("enrollments").insert({ user_id: user.id, course_id: id, position: (data?.enrollments.length ?? 0) });
     if (error) { toast.error(error.message); return; }
-    toast.success("Added to your roadmap 🚀");
+    toast.success("Added to your Starpath 🚀");
     refresh();
   };
 
@@ -80,7 +80,7 @@ function Catalog() {
                 <span className="flex flex-1 items-center justify-center gap-1 rounded-full bg-star/40 px-3 text-sm font-bold">🎓 Completed</span>
               ) : (<>
                 <Button size="sm" className="flex-1 rounded-full" disabled={enrolled.has(c.id)} onClick={() => add(c.id)}>
-                  {enrolled.has(c.id) ? <><Check className="h-4 w-4" /> In roadmap</> : <><Plus className="h-4 w-4" /> Add</>}
+                  {enrolled.has(c.id) ? <><Check className="h-4 w-4" /> In Starpath</> : <><Plus className="h-4 w-4" /> Add</>}
                 </Button>
                 <PriorDialog courseId={c.id} signedIn={!!user} onSaved={refresh} />
               </>)}

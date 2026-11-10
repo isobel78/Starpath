@@ -109,7 +109,7 @@ function Roadmap() {
                 <li key={cid} className="flex items-start gap-3 rounded-2xl bg-muted p-3">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sun font-bold text-primary-foreground">{i + 1}</span>
                   <div className="min-w-0 flex-1">
-                    <div className="font-semibold">{c.title} {ids.includes(cid) && <span className="text-xs text-primary">· already in your roadmap</span>}</div>
+                    <div className="font-semibold">{c.title} {ids.includes(cid) && <span className="text-xs text-primary">· already in your Starpath</span>}</div>
                     <div className="text-xs text-muted-foreground">{c.provider} · ~{c.hours}h · {c.units.length} units</div>
                     <p className="text-sm">{c.blurb}</p>
                   </div>
