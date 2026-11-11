@@ -45,7 +45,7 @@ export const Route = createFileRoute("/u/$username")({
 
 function ProfilePage() {
   useCatalog();
-  const { profile: p, enrollments } = Route.useLoaderData();
+  const { profile: p, enrollments, extraTitles } = Route.useLoaderData();
   const lv = levelFor(p.xp);
   const done = enrollments.filter((e) => e.completed_at);
   const current = enrollments.filter((e) => !e.completed_at);
