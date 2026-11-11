@@ -1,0 +1,9 @@
+# Roadmap
+- [x] Public Starpath page; Blast off requires sign-up
+- [x] Display name on sign-up; land on Today after login; "keep me signed in"
+- [x] Settings: view public profile link
+- [x] Nudge icon/wording; clear cheers on Today; weekday + ordering
+- [x] Day resets at 3am local
+- [x] Squad weekly goal award
+- [x] User-added courses (approved sites only, highlighted, admin sees all)
+- [x] Extra Credit section (XP, not scheduled), add to Starpath or Extra Credit, auto/manual sort

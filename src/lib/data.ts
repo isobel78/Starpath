@@ -28,6 +28,8 @@ export function useMyData() {
         supabase.from("checkins").select("*").eq("user_id", uid!).order("day", { ascending: false }).limit(60),
       ]);
       if (p.error) throw p.error;
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz && p.data.tz !== tz) void supabase.from("profiles").update({ tz }).eq("id", uid!);
       return { profile: p.data, enrollments: e.data ?? [], completions: l.data ?? [], checkins: c.data ?? [] };
     },
   });
@@ -39,7 +41,4 @@ export function useRefreshMe() {
   return () => qc.invalidateQueries({ queryKey: ["me"] });
 }
 
-export const todayISO = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-};
+export { todayISO } from "./day";

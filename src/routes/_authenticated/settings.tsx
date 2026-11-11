@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Upload } from "lucide-react";
+import { Upload, ExternalLink } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
@@ -71,7 +71,10 @@ function SettingsPage() {
 
   return (
     <AppShell>
-      <h1 className="text-4xl font-bold">Profile & <span className="text-gradient">settings</span></h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-4xl font-bold">Profile & <span className="text-gradient">settings</span></h1>
+        <Button asChild variant="outline" className="rounded-full"><Link to="/u/$username" params={{ username: data.profile.username }}><ExternalLink className="h-4 w-4" /> View public profile</Link></Button>
+      </div>
       <section className="mt-6 rounded-3xl border border-border bg-card p-6">
         <h2 className="text-xl font-bold">Avatar</h2>
         <div className="mt-4 flex flex-wrap items-center gap-4">

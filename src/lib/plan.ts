@@ -1,17 +1,18 @@
+import { studyToday } from "./day";
 import { unitsFor, dailyMinutes, buildSchedule, projectedFinish, type Unit } from "./schedule";
 
 type Data = {
   profile: { pace_mode: string; hours_per_week: number; target_date: string | null };
-  enrollments: { course_id: string; completed_at: string | null }[];
+  enrollments: { course_id: string; completed_at: string | null; extra?: boolean | null }[];
   completions: { course_id: string; unit_index: number; completed_on: string }[];
 };
 
 export function computePlan(data: Data, days = 7) {
   const done = new Set(data.completions.map((c) => `${c.course_id}:${c.unit_index}`));
-  const all: Unit[] = data.enrollments.filter((e) => !e.completed_at).flatMap((e) => unitsFor(e.course_id));
+  const all: Unit[] = data.enrollments.filter((e) => !e.completed_at && !e.extra).flatMap((e) => unitsFor(e.course_id));
   const remaining = all.filter((u) => !done.has(`${u.courseId}:${u.index}`));
   const remainingMinutes = remaining.reduce((s, u) => s + u.minutes, 0);
-  const today = new Date();
+  const today = studyToday();
   const target = data.profile.target_date ? new Date(data.profile.target_date + "T00:00:00") : null;
   const perDay = dailyMinutes({ mode: data.profile.pace_mode === "date" ? "date" : "hours", hoursPerWeek: Number(data.profile.hours_per_week), targetDate: target, remainingMinutes, today });
   const schedule = buildSchedule(remaining, perDay, today, days);

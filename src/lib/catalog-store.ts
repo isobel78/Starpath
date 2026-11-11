@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { applyCatalogRows, type CatalogRow } from "./catalog";
+import { applyCatalogRows, applyUserCourses, type CatalogRow } from "./catalog";
+import { useUser } from "./data";
 
 /** Loads admin catalog edits and applies them to the shared course list. Call in any page that shows courses. */
 export const catalogQuery = {
@@ -15,7 +16,18 @@ export const catalogQuery = {
     },
 };
 export function useCatalog() {
-  return useQuery(catalogQuery).dataUpdatedAt;
+  const { user } = useUser();
+  const base = useQuery(catalogQuery);
+  const mine = useQuery({
+    queryKey: ["my-courses", user?.id ?? null, base.dataUpdatedAt],
+    queryFn: async () => {
+      if (!user) { applyUserCourses([]); return 0; }
+      const { data } = await supabase.from("user_courses").select("id, data").eq("user_id", user.id).order("created_at");
+      applyUserCourses(data ?? []);
+      return Date.now();
+    },
+  });
+  return base.dataUpdatedAt + (mine.data ?? 0);
 }
 
 export function useIsAdmin(uid: string | undefined) {

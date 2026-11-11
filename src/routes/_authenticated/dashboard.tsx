@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Flame, Star, ExternalLink, Check, Clock, Pencil, Sparkles } from "lucide-react";
+import { Flame, Star, ExternalLink, Check, Clock, Pencil, Sparkles, X } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useCatalog } from "@/lib/catalog-store";
@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { useMyData, useRefreshMe, todayISO } from "@/lib/data";
 import { computePlan } from "@/lib/plan";
-import { levelFor } from "@/lib/schedule";
+import { levelFor, unitsFor } from "@/lib/schedule";
 import { COURSE_MAP } from "@/lib/catalog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -30,7 +30,7 @@ function Dashboard() {
   const cheers = useQuery({
     queryKey: ["cheers-in", user?.id], enabled: !!user,
     queryFn: async () => {
-      const { data: c } = await supabase.from("cheers").select("*").eq("to_user", user!.id).order("created_at", { ascending: false }).limit(5);
+      const { data: c } = await supabase.from("cheers").select("*").eq("to_user", user!.id).order("created_at", { ascending: false }).limit(30);
       const ids = [...new Set((c ?? []).map((x) => x.from_user))];
       const { data: ps } = ids.length ? await supabase.from("public_profiles").select("id, display_name, avatar_emoji").in("id", ids) : { data: [] };
       return (c ?? []).map((x) => ({ ...x, from: ps?.find((p) => p.id === x.from_user) }));
@@ -42,6 +42,15 @@ function Dashboard() {
   const plan = computePlan(data, 1);
   const todayUnits = plan.schedule[0]?.units ?? [];
   const doneToday = data.completions.filter((c) => c.completed_on === todayISO());
+  const done = plan.done;
+  const extraUnits = data.enrollments.filter((e) => e.extra && !e.prior && !e.completed_at)
+    .flatMap((e) => unitsFor(e.course_id).filter((u) => !done.has(`${u.courseId}:${u.index}`)).slice(0, 1));
+  const clearCheer = async (id?: string) => {
+    const q = supabase.from("cheers").delete().eq("to_user", user!.id);
+    const { error } = id ? await q.eq("id", id) : await q;
+    if (error) { toast.error(error.message); return; }
+    cheers.refetch();
+  };
   const checkedIn = data.checkins.some((c) => c.day === todayISO());
   const lv = levelFor(profile.xp);
 
@@ -99,7 +108,7 @@ function Dashboard() {
           <h2 className="text-2xl font-bold">Today's goals</h2>
           <span className="text-sm text-muted-foreground">Pace: ~{plan.perDay} min/day</span>
         </div>
-        {data.enrollments.length === 0 ? (
+        {data.enrollments.filter((e) => !e.extra && !e.prior).length === 0 ? (
           <div className="mt-4 rounded-3xl border-2 border-dashed border-border p-8 text-center">
             <p className="text-lg">Your Starpath is empty!</p>
             <Button asChild className="mt-3 rounded-full"><Link to="/roadmap">Pick a career track</Link></Button>
@@ -128,10 +137,36 @@ function Dashboard() {
         )}
       </section>
 
+      {extraUnits.length > 0 && (
+        <section className="mt-8">
+          <div className="flex items-end justify-between"><h2 className="text-2xl font-bold">✨ Extra Credit</h2><Link to="/roadmap" className="text-sm font-bold text-primary">Manage</Link></div>
+          <p className="text-sm text-muted-foreground">Bonus lessons for extra XP — they never change your weekly plan.</p>
+          <div className="mt-3 space-y-3">
+            {extraUnits.map((u) => { const c = COURSE_MAP[u.courseId]; return (
+              <div key={`${u.courseId}-${u.index}`} className={`flex flex-wrap items-center gap-3 rounded-2xl border p-4 ${c?.userAdded ? "border-star bg-star/15" : "border-border bg-card"}`}>
+                <button aria-label="Mark done" onClick={() => complete(u.courseId, u.index, u.minutes)} className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-accent text-accent transition hover:bg-accent hover:text-accent-foreground"><Check className="h-5 w-5" /></button>
+                <div className="min-w-0 flex-1"><div className="font-semibold">{u.title}</div><div className="text-xs text-muted-foreground">{c?.title} · {c?.provider}</div></div>
+                <span className="flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs font-bold"><Clock className="h-3.5 w-3.5" />{u.minutes} min</span>
+                <Button asChild size="sm" variant="outline" className="rounded-full"><a href={u.url} target="_blank" rel="noreferrer">Open <ExternalLink className="h-3.5 w-3.5" /></a></Button>
+              </div>); })}
+          </div>
+        </section>
+      )}
+
       {cheers.data && cheers.data.length > 0 && (
         <section className="mt-8">
-          <h2 className="text-2xl font-bold">Cheers from friends</h2>
-          <div className="mt-3 flex flex-wrap gap-3">{cheers.data.map((c) => <div key={c.id} className="rounded-2xl bg-star/30 px-4 py-3"><span className="text-xl">{c.emoji}</span> <b>{c.from?.display_name}</b> {c.message}</div>)}</div>
+          <div className="flex items-end justify-between">
+            <h2 className="text-2xl font-bold">Cheers & nudges</h2>
+            <Button variant="ghost" size="sm" className="rounded-full" onClick={() => clearCheer()}>Clear all</Button>
+          </div>
+          <div className="mt-3 space-y-2">{cheers.data.map((c) => (
+            <div key={c.id} className="flex items-center gap-3 rounded-2xl bg-star/30 px-4 py-3">
+              <span className="text-xl">{c.emoji}</span>
+              <div className="min-w-0 flex-1"><b>{c.from?.display_name ?? "A friend"}</b> {c.message}</div>
+              <span className="text-xs font-bold text-muted-foreground">{new Date(c.created_at).toLocaleDateString(undefined, { weekday: "long" })}</span>
+              <button aria-label="Clear" onClick={() => clearCheer(c.id)} className="rounded-full p-1 text-muted-foreground hover:bg-background/60 hover:text-foreground"><X className="h-4 w-4" /></button>
+            </div>))}
+          </div>
         </section>
       )}
     </AppShell>

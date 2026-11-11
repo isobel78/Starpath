@@ -1,0 +1,1 @@
+GRANT UPDATE (tz) ON public.profiles TO authenticated;

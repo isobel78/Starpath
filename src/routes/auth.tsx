@@ -8,6 +8,8 @@ import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { setRemember } from "@/lib/remember";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -18,6 +20,7 @@ export const Route = createFileRoute("/auth")({
       { property: "og:description", content: "Sign in or create your Starpath account." },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { mode?: "up" } => (s["mode"] === "up" ? { mode: "up" } : {}),
   component: AuthPage,
 });
 
@@ -25,7 +28,10 @@ const G = <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24"><pa
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"in" | "up">("in");
+  const search = Route.useSearch();
+  const [mode, setMode] = useState<"in" | "up">(search.mode ?? "in");
+  const [name, setName] = useState("");
+  const [keep, setKeep] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -38,17 +44,20 @@ function AuthPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === "up" && !name.trim()) { toast.error("Pick a display name"); return; }
     setBusy(true);
+    setRemember(keep);
     const res = mode === "in"
       ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin + "/dashboard" } });
+      : await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin + "/auth", data: { display_name: name.trim().slice(0, 40) } } });
     setBusy(false);
     if (res.error) { toast.error(res.error.message); return; }
     if (mode === "up" && !res.data.session) toast.success("Check your email to confirm your account ✨");
   };
 
   const oauth = async (p: "google" | "lovable") => {
-    const r = await lovable.auth.signInWithOAuth(p, { redirect_uri: window.location.origin });
+    setRemember(keep);
+    const r = await lovable.auth.signInWithOAuth(p, { redirect_uri: window.location.origin + "/auth" });
     if (r.error) toast.error(String(r.error.message ?? r.error));
   };
 
@@ -67,8 +76,10 @@ function AuthPage() {
         </div>
         <div className="my-5 text-center text-xs font-bold uppercase text-muted-foreground">or with email</div>
         <form onSubmit={submit} className="space-y-4">
+          {mode === "up" && <div><Label htmlFor="name">Display name</Label><Input id="name" required maxLength={40} placeholder="What should we call you?" value={name} onChange={(e) => setName(e.target.value)} /></div>}
           <div><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
           <div><Label htmlFor="pw">Password</Label><Input id="pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+          <label className="flex items-center gap-2 text-sm font-semibold"><Checkbox checked={keep} onCheckedChange={(v) => setKeep(v === true)} /> Keep me signed in</label>
           <Button type="submit" disabled={busy} className="w-full rounded-full" size="lg">{mode === "in" ? "Sign in" : "Create account"}</Button>
         </form>
         <button className="mt-4 w-full text-sm font-semibold text-primary" onClick={() => setMode(mode === "in" ? "up" : "in")}>

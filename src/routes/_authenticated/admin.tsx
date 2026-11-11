@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Pencil, EyeOff, Eye, RotateCcw } from "lucide-react";
+import { Plus, Pencil, EyeOff, Eye, RotateCcw, Trash2, ArrowUpCircle, ExternalLink } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,16 @@ function AdminPage() {
   const qc = useQueryClient();
   const rowsQ = useQuery(catalogQuery);
   const rows = rowsQ.data ?? [];
-  const [tab, setTab] = useState<"courses" | "tracks">("courses");
+  const [tab, setTab] = useState<"courses" | "tracks" | "learners">("courses");
+  const learnerQ = useQuery({
+    queryKey: ["admin-user-courses"], enabled: isAdmin,
+    queryFn: async () => {
+      const { data } = await supabase.from("user_courses").select("id, user_id, data, created_at").order("created_at", { ascending: false });
+      const ids = [...new Set((data ?? []).map((r) => r.user_id))];
+      const { data: ps } = ids.length ? await supabase.from("public_profiles").select("id, username").in("id", ids) : { data: [] };
+      return (data ?? []).map((r) => ({ ...r, course: r.data as unknown as Course, username: ps?.find((p) => p.id === r.user_id)?.username ?? "?" }));
+    },
+  });
   const [editCourse, setEditCourse] = useState<Course | null>(null);
   const [editTrack, setEditTrack] = useState<Track | null>(null);
   const [q, setQ] = useState("");
@@ -50,18 +59,34 @@ function AdminPage() {
   const isBase = (kind: string, id: string) => (kind === "course" ? BASE_COURSES : BASE_TRACKS).some((x) => x.id === id);
   const isEdited = (kind: string, id: string) => rows.some((r) => r.kind === kind && r.id === id);
 
-  const courses = COURSES.filter((c) => (c.title + c.provider + c.area).toLowerCase().includes(q.toLowerCase()));
+  const courses = COURSES.filter((c) => !c.userAdded).filter((c) => (c.title + c.provider + c.area).toLowerCase().includes(q.toLowerCase()));
   const blankCourse: Course = { id: "", title: "", provider: "freeCodeCamp", area: "Frontend", hours: 10, url: "https://", prereqs: [], units: [], blurb: "", tags: [] };
 
   return (
     <AppShell>
       <h1 className="text-4xl font-bold">Curriculum <span className="text-gradient">admin</span></h1>
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        {(["courses", "tracks"] as const).map((t) => <button key={t} onClick={() => setTab(t)} className={`rounded-full px-4 py-2 font-bold ${tab === t ? "bg-primary text-primary-foreground shadow-glow" : "bg-muted"}`}>{t === "courses" ? `Courses (${COURSES.length})` : `Career tracks (${TRACKS.length})`}</button>)}
+        {(["courses", "tracks", "learners"] as const).map((t) => <button key={t} onClick={() => setTab(t)} className={`rounded-full px-4 py-2 font-bold ${tab === t ? "bg-primary text-primary-foreground shadow-glow" : "bg-muted"}`}>{t === "courses" ? `Courses (${COURSES.filter((c) => !c.userAdded).length})` : t === "tracks" ? `Career tracks (${TRACKS.length})` : `Learner-added (${learnerQ.data?.length ?? 0})`}</button>)}
         <Button className="ml-auto rounded-full" onClick={() => tab === "courses" ? setEditCourse(blankCourse) : setEditTrack({ id: "", title: "", emoji: "✨", description: "", courses: [] })}><Plus className="h-4 w-4" /> New {tab === "courses" ? "course" : "track"}</Button>
       </div>
 
-      {tab === "courses" ? (
+      {tab === "learners" ? (
+        <div className="mt-4 space-y-2">
+          <p className="text-sm text-muted-foreground">Courses learners added for themselves. Only the learner who added one sees it — promote it to make it part of everyone's catalog.</p>
+          {(learnerQ.data ?? []).length === 0 && <p className="text-muted-foreground">No learner-added courses yet.</p>}
+          {(learnerQ.data ?? []).map((r) => (
+            <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-star bg-star/15 p-3">
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold">{r.course.title}</div>
+                <div className="truncate text-xs text-muted-foreground">@{r.username} · {r.course.provider} · {r.course.area} · ~{r.course.hours}h · {r.course.units?.length ?? 0} units · {new Date(r.created_at).toLocaleDateString()}</div>
+              </div>
+              <Button asChild size="sm" variant="ghost"><a href={r.course.url} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4" /></a></Button>
+              <Button size="sm" variant="ghost" onClick={() => setEditCourse({ ...r.course, userAdded: false, id: slug(r.course.title), prereqs: [], tags: r.course.tags ?? [] })}><ArrowUpCircle className="h-4 w-4" /> Promote</Button>
+              <Button size="sm" variant="ghost" onClick={async () => { const { error } = await supabase.from("user_courses").delete().eq("id", r.id); if (error) toast.error(error.message); else { toast.success("Deleted"); learnerQ.refetch(); } }}><Trash2 className="h-4 w-4" /> Delete</Button>
+            </div>
+          ))}
+        </div>
+      ) : tab === "courses" ? (
         <>
           <Input placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} className="mt-4 rounded-full" />
           <div className="mt-4 space-y-2">

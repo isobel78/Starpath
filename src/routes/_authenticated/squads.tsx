@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { UserPlus, Check, X, Copy, Megaphone, Crown } from "lucide-react";
+import { UserPlus, Check, X, Copy, Crown } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,9 @@ export const Route = createFileRoute("/_authenticated/squads")({
 type P = { id: string; username: string; display_name: string; avatar_emoji: string; avatar_url: string | null; current_streak: number };
 
 function weekStart() { const d = new Date(); const day = (d.getDay() + 6) % 7; d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - day); return d.toISOString(); }
+
+/** Matches the server's award tag: Monday of the current UTC week. */
+function weekTag() { const d = new Date(); const day = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - day); return d.toISOString().slice(0, 10); }
 
 async function weeklyXp(ids: string[]) {
   if (!ids.length) return {} as Record<string, number>;
@@ -43,7 +46,8 @@ function Squads() {
       (sm ?? []).forEach((m) => ids.add(m.user_id));
       const { data: ps } = await supabase.from("public_profiles").select("id, username, display_name, avatar_emoji, avatar_url, current_streak").in("id", [...ids]);
       const xp = await weeklyXp([...ids]);
-      return { friendships: fr ?? [], squads: sq ?? [], members: sm ?? [], profiles: Object.fromEntries((ps ?? []).map((p) => [p.id, p])) as Record<string, P>, xp };
+      const { data: awards } = await supabase.from("xp_events").select("reason").eq("user_id", uid!).like("reason", "squad:%");
+      return { friendships: fr ?? [], squads: sq ?? [], members: sm ?? [], awards: (awards ?? []).map((a) => a.reason), profiles: Object.fromEntries((ps ?? []).map((p) => [p.id, p])) as Record<string, P>, xp };
     },
   });
   const [search, setSearch] = useState("");
@@ -51,7 +55,7 @@ function Squads() {
   const [code, setCode] = useState("");
   const reload = () => social.refetch();
   if (!social.data || !uid) return <AppShell><p className="animate-pulse text-center">Loading…</p></AppShell>;
-  const { friendships, squads, members, profiles, xp } = social.data;
+  const { friendships, squads, members, profiles, xp, awards } = social.data;
   const friends = friendships.filter((f) => f.status === "accepted").map((f) => (f.requester === uid ? f.addressee : f.requester));
   const incoming = friendships.filter((f) => f.status === "pending" && f.addressee === uid);
   const outgoing = friendships.filter((f) => f.status === "pending" && f.requester === uid);
@@ -73,7 +77,7 @@ function Squads() {
   const cheer = async (to: string, emoji: string, message: string) => {
     const { error } = await supabase.from("cheers").insert({ from_user: uid, to_user: to, emoji, message });
     if (error) { toast.error(error.message); return; }
-    toast.success(`${emoji} Cheer sent!`);
+    toast.success(emoji === "👉" ? "👉 Nudged!" : `${emoji} Cheer sent!`);
   };
   const createSquad = async () => {
     if (!squadName.trim()) return;
@@ -98,8 +102,8 @@ function Squads() {
   );
   const CheerBtns = ({ to }: { to: string }) => to === uid ? null : (
     <div className="flex gap-1">
-      <Button size="icon" variant="ghost" aria-label="Cheer" onClick={() => cheer(to, "🎉", "is cheering you on!")}>🎉</Button>
-      <Button size="icon" variant="ghost" aria-label="Nudge" onClick={() => cheer(to, "👉", "nudged you to study today!")}><Megaphone className="h-4 w-4" /></Button>
+      <Button size="icon" variant="ghost" aria-label="Cheer" title="Cheer" onClick={() => cheer(to, "🎉", "is cheering you on!")}>🎉</Button>
+      <Button size="icon" variant="ghost" aria-label="Nudge" title="Nudge" onClick={() => cheer(to, "👉", "nudged you to study today!")}>👉</Button>
     </div>
   );
 
@@ -138,7 +142,8 @@ function Squads() {
                 </div>
                 <div className="mt-3 flex items-center justify-between text-sm font-semibold"><span>Weekly goal: {total} / {s.weekly_xp_goal} XP</span>{s.owner_id === uid && <Input type="number" defaultValue={s.weekly_xp_goal} onBlur={(e) => setGoal(s.id, Number(e.target.value))} className="h-8 w-24 bg-card" aria-label="Weekly goal" />}</div>
                 <Progress value={Math.min(100, (total / s.weekly_xp_goal) * 100)} className="mt-2 h-3" />
-                {total >= s.weekly_xp_goal && <p className="mt-2 font-bold text-primary">🌟 Goal smashed this week!</p>}
+                {total >= s.weekly_xp_goal && <SquadAward squadId={s.id} claimed={awards.includes(`squad:${s.id}:${weekTag()}`)} onClaimed={reload} />}
+                {awards.filter((a) => a.startsWith(`squad:${s.id}:`)).length > 0 && <p className="mt-1 text-sm font-semibold">🏆 Squad trophies earned: {awards.filter((a) => a.startsWith(`squad:${s.id}:`)).length}</p>}
                 <div className="mt-4 space-y-2">{ms.map((id, i) => <Row key={id} p={profiles[id]!} rank={i} right={<><span className="font-bold text-primary">{xp[id] ?? 0} XP</span><CheerBtns to={id} /></>} />)}</div>
               </div>
             );
@@ -147,4 +152,17 @@ function Squads() {
       </Tabs>
     </AppShell>
   );
+}
+
+/** Claims this week's squad goal award (+50 XP) once per member per week. */
+function SquadAward({ squadId, claimed, onClaimed }: { squadId: string; claimed: boolean; onClaimed: () => void }) {
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    if (done) return;
+    setDone(true);
+    supabase.rpc("claim_squad_award", { _squad: squadId }).then(({ data }) => {
+      if (data) { toast.success("🏆 Squad goal smashed! +50 XP award"); onClaimed(); }
+    });
+  }, [squadId, done, onClaimed]);
+  return <p className="mt-2 rounded-2xl bg-star/40 px-4 py-2 font-bold">🏆 Goal smashed this week! {claimed ? "Award collected (+50 XP)" : "Collecting your award…"}</p>;
 }

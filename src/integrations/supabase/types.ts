@@ -95,6 +95,7 @@ export type Database = {
           completed_at: string | null
           course_id: string
           created_at: string
+          extra: boolean
           id: string
           position: number
           prior: boolean
@@ -105,6 +106,7 @@ export type Database = {
           completed_at?: string | null
           course_id: string
           created_at?: string
+          extra?: boolean
           id?: string
           position?: number
           prior?: boolean
@@ -115,6 +117,7 @@ export type Database = {
           completed_at?: string | null
           course_id?: string
           created_at?: string
+          extra?: boolean
           id?: string
           position?: number
           prior?: boolean
@@ -191,6 +194,7 @@ export type Database = {
           pace_mode: string
           target_date: string | null
           track_id: string | null
+          tz: string
           username: string
           xp: number
         }
@@ -208,6 +212,7 @@ export type Database = {
           pace_mode?: string
           target_date?: string | null
           track_id?: string | null
+          tz?: string
           username: string
           xp?: number
         }
@@ -225,6 +230,7 @@ export type Database = {
           pace_mode?: string
           target_date?: string | null
           track_id?: string | null
+          tz?: string
           username?: string
           xp?: number
         }
@@ -283,6 +289,27 @@ export type Database = {
           name?: string
           owner_id?: string
           weekly_xp_goal?: number
+        }
+        Relationships: []
+      }
+      user_courses: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -396,12 +423,31 @@ export type Database = {
         }
         Relationships: []
       }
+      public_user_courses: {
+        Row: {
+          id: string | null
+          provider: string | null
+          title: string | null
+        }
+        Insert: {
+          id?: string | null
+          provider?: never
+          title?: never
+        }
+        Update: {
+          id?: string | null
+          provider?: never
+          title?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _award: {
         Args: { _reason: string; _uid: string; _xp: number }
         Returns: undefined
       }
+      claim_squad_award: { Args: { _squad: string }; Returns: boolean }
       complete_course: {
         Args: { _cert: string; _course: string }
         Returns: undefined
@@ -426,6 +472,7 @@ export type Database = {
         Returns: boolean
       }
       join_squad: { Args: { _code: string }; Returns: string }
+      local_day: { Args: { _uid: string }; Returns: string }
       mark_prior_completion: {
         Args: { _cert: string; _course: string }
         Returns: undefined
