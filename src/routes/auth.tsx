@@ -20,7 +20,7 @@ export const Route = createFileRoute("/auth")({
       { property: "og:description", content: "Sign in or create your Starpath account." },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>) => ({ mode: s.mode === "up" ? ("up" as const) : undefined }),
+  validateSearch: (s: Record<string, unknown>): { mode?: "up" } => (s.mode === "up" ? { mode: "up" } : {}),
   component: AuthPage,
 });
 
