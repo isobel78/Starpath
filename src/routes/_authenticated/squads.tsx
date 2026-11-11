@@ -21,6 +21,9 @@ type P = { id: string; username: string; display_name: string; avatar_emoji: str
 
 function weekStart() { const d = new Date(); const day = (d.getDay() + 6) % 7; d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - day); return d.toISOString(); }
 
+/** Matches the server's award tag: Monday of the current UTC week. */
+function weekTag() { const d = new Date(); const day = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - day); return d.toISOString().slice(0, 10); }
+
 async function weeklyXp(ids: string[]) {
   if (!ids.length) return {} as Record<string, number>;
   const { data } = await supabase.from("xp_events").select("user_id, amount").in("user_id", ids).gte("created_at", weekStart());
@@ -139,7 +142,7 @@ function Squads() {
                 </div>
                 <div className="mt-3 flex items-center justify-between text-sm font-semibold"><span>Weekly goal: {total} / {s.weekly_xp_goal} XP</span>{s.owner_id === uid && <Input type="number" defaultValue={s.weekly_xp_goal} onBlur={(e) => setGoal(s.id, Number(e.target.value))} className="h-8 w-24 bg-card" aria-label="Weekly goal" />}</div>
                 <Progress value={Math.min(100, (total / s.weekly_xp_goal) * 100)} className="mt-2 h-3" />
-                {total >= s.weekly_xp_goal && <SquadAward squadId={s.id} claimed={awards.some((a) => a.startsWith(`squad:${s.id}:`) )} onClaimed={reload} />}
+                {total >= s.weekly_xp_goal && <SquadAward squadId={s.id} claimed={awards.includes(`squad:${s.id}:${weekTag()}`)} onClaimed={reload} />}
                 {awards.filter((a) => a.startsWith(`squad:${s.id}:`)).length > 0 && <p className="mt-1 text-sm font-semibold">🏆 Squad trophies earned: {awards.filter((a) => a.startsWith(`squad:${s.id}:`)).length}</p>}
                 <div className="mt-4 space-y-2">{ms.map((id, i) => <Row key={id} p={profiles[id]!} rank={i} right={<><span className="font-bold text-primary">{xp[id] ?? 0} XP</span><CheerBtns to={id} /></>} />)}</div>
               </div>
