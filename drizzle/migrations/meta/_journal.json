@@ -29,6 +29,13 @@
       "when": 1794349217517,
       "tag": "0003_harden_xp_and_squads",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794435897839,
+      "tag": "0004_extra_credit_user_courses_local_day",
+      "breakpoints": true
     }
   ]
 }
