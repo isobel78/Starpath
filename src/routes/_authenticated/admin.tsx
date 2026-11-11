@@ -81,7 +81,7 @@ function AdminPage() {
                 <div className="truncate text-xs text-muted-foreground">@{r.username} · {r.course.provider} · {r.course.area} · ~{r.course.hours}h · {r.course.units?.length ?? 0} units · {new Date(r.created_at).toLocaleDateString()}</div>
               </div>
               <Button asChild size="sm" variant="ghost"><a href={r.course.url} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4" /></a></Button>
-              <Button size="sm" variant="ghost" onClick={() => setEditCourse({ ...r.course, userAdded: undefined, id: slug(r.course.title), prereqs: [], tags: r.course.tags ?? [] })}><ArrowUpCircle className="h-4 w-4" /> Promote</Button>
+              <Button size="sm" variant="ghost" onClick={() => setEditCourse({ ...r.course, userAdded: false, id: slug(r.course.title), prereqs: [], tags: r.course.tags ?? [] })}><ArrowUpCircle className="h-4 w-4" /> Promote</Button>
               <Button size="sm" variant="ghost" onClick={async () => { const { error } = await supabase.from("user_courses").delete().eq("id", r.id); if (error) toast.error(error.message); else { toast.success("Deleted"); learnerQ.refetch(); } }}><Trash2 className="h-4 w-4" /> Delete</Button>
             </div>
           ))}
