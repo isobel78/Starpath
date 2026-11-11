@@ -1,21 +1,21 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowUp, ArrowDown, Trash2, Wand2, Award, ExternalLink } from "lucide-react";
+import { ArrowUp, ArrowDown, Trash2, Wand2, Award, ExternalLink, Sparkles, Map as MapIcon } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useMyData, useRefreshMe } from "@/lib/data";
+import { useMyData, useRefreshMe, useUser } from "@/lib/data";
 import { computePlan } from "@/lib/plan";
 import { COURSE_MAP, TRACKS } from "@/lib/catalog";
 import { orderByPrereqs, missingPrereqs } from "@/lib/schedule";
 import { supabase } from "@/integrations/supabase/client";
 import { useCatalog } from "@/lib/catalog-store";
 
-export const Route = createFileRoute("/_authenticated/roadmap")({
-  head: () => ({ meta: [{ title: "My Starpath" }, { name: "description", content: "Pick a career track or build your own course playlist." }, { property: "og:title", content: "My Starpath" }, { property: "og:description", content: "Pick a career track or build your own course playlist." }] }),
+export const Route = createFileRoute("/roadmap")({
+  head: () => ({ meta: [{ title: "My Starpath" }, { name: "description", content: "Pick a career track or build your own course playlist." }, { property: "og:title", content: "My Starpath" }, { property: "og:description", content: "Pick a career track or build your own course playlist." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Roadmap,
 });
 
@@ -35,26 +35,31 @@ function Roadmap() {
     setHours(String(data.profile.hours_per_week));
     setDate(data.profile.target_date ?? "");
   }, [data?.profile]);
-  if (!data || !user) return <AppShell><p className="animate-pulse text-center">Loading…</p></AppShell>;
-  const ids = data.enrollments.map((e) => e.course_id);
+  const { ready } = useUser();
+  if (!ready || (user && !data)) return <AppShell><p className="animate-pulse text-center">Loading…</p></AppShell>;
+  const me = data ?? { profile: { track_id: null as string | null, pace_mode: mode, hours_per_week: 7, target_date: null as string | null }, enrollments: [] as NonNullable<typeof data>["enrollments"], completions: [] as NonNullable<typeof data>["completions"] };
+  const ids = me.enrollments.map((e) => e.course_id);
   const track = TRACKS.find((t) => t.id === preview) ?? null;
   const previewIds = track ? orderByPrereqs([...new Set([...ids, ...track.courses])]) : ids;
   const plan = computePlan({
     profile: { pace_mode: mode, hours_per_week: Number(hours) || 7, target_date: mode === "date" ? date || null : null },
-    enrollments: previewIds.map((cid) => data.enrollments.find((e) => e.course_id === cid) ?? { course_id: cid, completed_at: null }),
-    completions: data.completions,
+    enrollments: previewIds.map((cid) => me.enrollments.find((e) => e.course_id === cid) ?? { course_id: cid, completed_at: null }),
+    completions: me.completions,
   }, 1);
-  const active = data.enrollments.filter((e) => !e.prior);
-  const prior = data.enrollments.filter((e) => e.prior);
+  const active = me.enrollments.filter((e) => !e.prior && !e.extra);
+  const extra = me.enrollments.filter((e) => !e.prior && e.extra);
+  const prior = me.enrollments.filter((e) => e.prior);
   const missing = missingPrereqs(ids);
 
   const savePositions = async (order: string[]) => {
+    if (!user) return;
     await Promise.all(order.map((cid, i) => supabase.from("enrollments").update({ position: i }).eq("user_id", user.id).eq("course_id", cid)));
     refresh();
   };
   const paceFields = () => ({ pace_mode: mode, hours_per_week: Math.max(1, Math.min(80, Number(hours) || 7)), target_date: mode === "date" ? date || null : null });
   const startLearning = async () => {
     if (!track) return;
+    if (!user) { toast("Create a free account to blast off 🚀"); navigate({ to: "/auth", search: { mode: "up" } }); return; }
     if (mode === "date" && !date) { toast.error("Pick a target date"); return; }
     setBusy(true);
     const merged = previewIds;
@@ -68,9 +73,11 @@ function Roadmap() {
     toast.success(`${track.emoji} ${track.title} — let's go!`);
     navigate({ to: "/calendar" });
   };
+  const moveIn = (list: typeof active, i: number, d: number) => { const o = list.map((e) => e.course_id); const j = i + d; if (j < 0 || j >= o.length) return; [o[i], o[j]] = [o[j]!, o[i]!]; savePositions(o); };
+  const setExtra = async (cid: string, v: boolean) => { if (!user) return; const { error } = await supabase.from("enrollments").update({ extra: v }).eq("user_id", user.id).eq("course_id", cid); if (error) { toast.error(error.message); return; } toast.success(v ? "Moved to Extra Credit ✨" : "Moved to your Starpath 🚀"); refresh(); };
   const move = (i: number, d: number) => { const o = active.map((e) => e.course_id); const j = i + d; if (j < 0 || j >= o.length) return; [o[i], o[j]] = [o[j]!, o[i]!]; savePositions(o); };
-  const remove = async (cid: string) => { await supabase.from("enrollments").delete().eq("user_id", user.id).eq("course_id", cid); refresh(); };
-  const addMissing = async () => {
+  const remove = async (cid: string) => { if (!user) return; await supabase.from("enrollments").delete().eq("user_id", user.id).eq("course_id", cid); refresh(); };
+  const addMissing = async () => { if (!user) return;
     const merged = orderByPrereqs([...missing, ...ids]);
     await supabase.from("enrollments").insert(missing.map((c) => ({ user_id: user.id, course_id: c, position: merged.indexOf(c) })));
     await savePositions(merged);
@@ -78,6 +85,7 @@ function Roadmap() {
   };
   const savePace = async () => {
     if (mode === "date" && !date) { toast.error("Pick a target date"); return; }
+    if (!user) return;
     const { error } = await supabase.from("profiles").update(paceFields()).eq("id", user.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Schedule updated"); refresh();
@@ -85,7 +93,8 @@ function Roadmap() {
 
   return (
     <AppShell>
-      <h1 className="text-4xl font-bold">My <span className="text-gradient">Starpath</span></h1>
+      <h1 className="text-4xl font-bold">{user ? "My " : "Explore a "}<span className="text-gradient">Starpath</span></h1>
+      {!user && <p className="mt-2 text-muted-foreground">Peek at every career track for free. When you're ready, press Blast off and we'll set up your account.</p>}
 
       <section className="mt-6">
         <h2 className="text-xl font-bold">Browse career tracks</h2>
@@ -94,7 +103,7 @@ function Roadmap() {
           {TRACKS.map((t) => (
             <button key={t.id} onClick={() => setPreview(preview === t.id ? null : t.id)} aria-pressed={preview === t.id} className={`min-w-56 rounded-3xl border p-4 text-left transition hover:-translate-y-1 hover:shadow-glow ${preview === t.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}>
               <div className="text-3xl">{t.emoji}</div>
-              <div className="mt-1 font-display text-lg font-semibold">{t.title} {data.profile.track_id === t.id && <span className="text-xs">· current</span>}</div>
+              <div className="mt-1 font-display text-lg font-semibold">{t.title} {me.profile.track_id === t.id && <span className="text-xs">· current</span>}</div>
               <div className="text-xs opacity-80">{t.description}</div>
             </button>
           ))}
@@ -127,15 +136,15 @@ function Roadmap() {
             {(["hours", "date"] as const).map((m) => <button key={m} onClick={() => setMode(m)} className={`rounded-full px-4 py-2 text-sm font-bold ${mode === m ? "bg-primary text-primary-foreground" : ""}`}>{m === "hours" ? "Hours / week" : "Finish by date"}</button>)}
           </div>
           {mode === "hours" ? <Input type="number" min={1} max={80} className="w-28 bg-card" value={hours} onChange={(e) => setHours(e.target.value)} /> : <Input type="date" className="w-44 bg-card" value={date} onChange={(e) => setDate(e.target.value)} />}
-          {track ? <Button onClick={startLearning} disabled={busy} size="lg" className="rounded-full shadow-glow">Blast off! 🚀</Button> : <Button onClick={savePace} className="rounded-full">Save</Button>}
+          {track || !user ? <Button onClick={track ? startLearning : () => toast("Pick a career track above first ✨")} disabled={busy} size="lg" className="rounded-full shadow-glow">Blast off! 🚀</Button> : <Button onClick={savePace} className="rounded-full">Save</Button>}
         </div>
         <p className="mt-3 text-sm">≈ <b>{plan.perDay} min/day</b> · {Math.round(plan.remainingMinutes / 60)}h remaining · estimated finish <b>{plan.finish.toLocaleDateString()}</b></p>
       </section>
 
-      <section className="mt-8">
+      {user && <><section className="mt-8">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xl font-bold">Your courses ({active.length})</h2>
-          {ids.length > 1 && <Button variant="outline" size="sm" className="rounded-full" onClick={() => savePositions(orderByPrereqs(ids)).then(() => toast.success("Sorted by prerequisites"))}><Wand2 className="h-4 w-4" /> Auto-order</Button>}
+          {active.length > 1 && <Button variant="outline" size="sm" className="rounded-full" onClick={() => savePositions(orderByPrereqs(active.map((e) => e.course_id))).then(() => toast.success("Sorted by prerequisites"))}><Wand2 className="h-4 w-4" /> Auto-order</Button>}
         </div>
         {missing.length > 0 && (
           <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl bg-star/30 p-4 text-sm">
@@ -146,10 +155,10 @@ function Roadmap() {
         <div className="mt-4 space-y-3">
           {active.map((e, i) => {
             const c = COURSE_MAP[e.course_id]; if (!c) return null;
-            const doneN = data.completions.filter((x) => x.course_id === c.id).length;
+            const doneN = me.completions.filter((x) => x.course_id === c.id).length;
             const pct = Math.round((doneN / c.units.length) * 100);
             return (
-              <div key={e.id} className="rounded-3xl border border-border bg-card p-4">
+              <div key={e.id} className={`rounded-3xl border p-4 ${c.userAdded ? "border-star bg-star/15" : "border-border bg-card"}`}>
                 <div className="flex items-center gap-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sun font-display font-bold text-primary-foreground">{i + 1}</span>
                   <div className="min-w-0 flex-1">
@@ -159,6 +168,7 @@ function Roadmap() {
                   <div className="flex">
                     <Button size="icon" variant="ghost" aria-label="Move up" onClick={() => move(i, -1)}><ArrowUp className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" aria-label="Move down" onClick={() => move(i, 1)}><ArrowDown className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" aria-label="Move to Extra Credit" title="Move to Extra Credit" onClick={() => setExtra(c.id, true)}><Sparkles className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" aria-label="Remove" onClick={() => remove(c.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 </div>
@@ -168,6 +178,25 @@ function Roadmap() {
             );
           })}
         </div>
+        <div className="mt-8">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-xl font-bold">✨ Extra Credit ({extra.length})</h2>
+            {extra.length > 1 && <Button variant="outline" size="sm" className="rounded-full" onClick={() => savePositions(orderByPrereqs(extra.map((e) => e.course_id))).then(() => toast.success("Sorted by prerequisites"))}><Wand2 className="h-4 w-4" /> Auto-order</Button>}
+          </div>
+          <p className="text-sm text-muted-foreground">Bonus courses that earn XP but stay out of your weekly plan. Check off their lessons on the Today page.</p>
+          <div className="mt-3 space-y-2">
+            {extra.length === 0 && <p className="text-sm text-muted-foreground">Nothing here yet — add one from the <Link to="/catalog" className="font-bold text-primary">catalog</Link>.</p>}
+            {extra.map((e, i) => { const c = COURSE_MAP[e.course_id]; if (!c) return null; const doneN = me.completions.filter((x) => x.course_id === c.id).length; return (
+              <div key={e.id} className={`flex items-center gap-3 rounded-2xl border p-3 ${c.userAdded ? "border-star bg-star/15" : "border-border bg-card"}`}>
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-accent-foreground">{i + 1}</span>
+                <div className="min-w-0 flex-1"><div className="font-semibold">{c.title} {e.completed_at && "🎓"}</div><div className="text-xs text-muted-foreground">{c.provider} · {doneN}/{c.units.length} units</div></div>
+                <Button size="icon" variant="ghost" aria-label="Move up" onClick={() => moveIn(extra, i, -1)}><ArrowUp className="h-4 w-4" /></Button>
+                <Button size="icon" variant="ghost" aria-label="Move down" onClick={() => moveIn(extra, i, 1)}><ArrowDown className="h-4 w-4" /></Button>
+                <Button size="icon" variant="ghost" aria-label="Move to Starpath" title="Move to Starpath" onClick={() => setExtra(c.id, false)}><MapIcon className="h-4 w-4" /></Button>
+                <Button size="icon" variant="ghost" aria-label="Remove" onClick={() => remove(c.id)}><Trash2 className="h-4 w-4" /></Button>
+              </div>); })}
+          </div>
+        </div>
         {prior.length > 0 && (
           <div className="mt-8">
             <h2 className="text-xl font-bold">Completed before Starpath 🎓</h2>
@@ -176,7 +205,7 @@ function Roadmap() {
             </div>
           </div>
         )}
-      </section>
+      </section></>}
     </AppShell>
   );
 }
