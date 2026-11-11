@@ -35,3 +35,6 @@ use the editor.
 - Uploaded avatars are stored as small 256px data URLs in `profiles.avatar_url` (workspace blocks public storage buckets). Why: public profiles need permanent image links.
 - Schedules are computed client-side from unfinished units starting today (`src/lib/schedule.ts`), never stored. Why: missed days rebalance automatically.
 - XP and streaks change only through security-definer RPCs (complete_unit, daily_checkin, complete_course); profiles' xp/streak columns are not user-updatable. Why: prevent self-awarded XP.
+- Learner-added courses live in `user_courses` (owner + admin read), are drafted by `draftCourseFromUrl` (AI reads the page) and merged into the catalog only for their owner via `applyUserCourses`. Allowed sites are in `src/lib/providers.ts` and mirrored in the table's insert policy. Why: keeps personal courses private while matching the built-in course shape.
+- Extra Credit = `enrollments.extra`; it earns XP through `complete_unit` but `computePlan` skips it. Why: bonus work must never shift the weekly plan.
+- A study day ends at 03:00 in the learner's time zone (`profiles.tz`, synced on load): client uses `src/lib/day.ts`, server uses `public.local_day()`. Why: late-night study counts toward the right day and streak.
