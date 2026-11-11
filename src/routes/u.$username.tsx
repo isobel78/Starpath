@@ -22,7 +22,10 @@ const getProfile = createServerFn({ method: "GET" })
     if (!pRaw?.id) return null;
     const p = pRaw as { [K in keyof typeof pRaw]-?: NonNullable<(typeof pRaw)[K]> } & { avatar_url: string | null; track_id: string | null };
     const { data: e } = await sb.from("public_enrollments").select("course_id, completed_at, certificate_url").eq("user_id", p.id).order("position");
-    return { profile: p, enrollments: (e ?? []).filter((r) => r.course_id) as { course_id: string; completed_at: string | null; certificate_url: string | null }[] };
+    const own = (e ?? []).map((r) => r.course_id).filter((id): id is string => !!id && id.startsWith("u-"));
+    const { data: uc } = own.length ? await sb.from("public_user_courses").select("id, title, provider").in("id", own) : { data: [] };
+    const extraTitles = Object.fromEntries((uc ?? []).map((c) => [c.id!, { title: c.title ?? "", provider: c.provider ?? "" }])) as Record<string, { title: string; provider: string }>;
+    return { extraTitles, profile: p, enrollments: (e ?? []).filter((r) => r.course_id) as { course_id: string; completed_at: string | null; certificate_url: string | null }[] };
   });
 
 export const Route = createFileRoute("/u/$username")({
@@ -87,14 +90,14 @@ function ProfilePage() {
           <h2 className="text-2xl font-bold">Certificates</h2>
           <div className="mt-4 space-y-2">
             {done.length === 0 && <p className="text-muted-foreground">No completed courses yet.</p>}
-            {done.map((e) => <div key={e.course_id} className="flex items-center gap-3 rounded-2xl bg-card p-4 border border-border"><span className="text-2xl">🎓</span><div className="flex-1"><div className="font-semibold">{COURSE_MAP[e.course_id]?.title}</div><div className="text-xs text-muted-foreground">{COURSE_MAP[e.course_id]?.provider}</div></div>{e.certificate_url && <a href={e.certificate_url} target="_blank" rel="noreferrer nofollow" className="flex items-center gap-1 text-sm font-bold text-primary">View <ExternalLink className="h-3.5 w-3.5" /></a>}</div>)}
+            {done.map((e) => <div key={e.course_id} className="flex items-center gap-3 rounded-2xl bg-card p-4 border border-border"><span className="text-2xl">🎓</span><div className="flex-1"><div className="font-semibold">{(COURSE_MAP[e.course_id] ?? extraTitles[e.course_id])?.title}</div><div className="text-xs text-muted-foreground">{(COURSE_MAP[e.course_id] ?? extraTitles[e.course_id])?.provider}</div></div>{e.certificate_url && <a href={e.certificate_url} target="_blank" rel="noreferrer nofollow" className="flex items-center gap-1 text-sm font-bold text-primary">View <ExternalLink className="h-3.5 w-3.5" /></a>}</div>)}
           </div>
         </div>
         <div>
           <h2 className="text-2xl font-bold">Currently learning</h2>
           <div className="mt-4 space-y-2">
             {current.length === 0 && <p className="text-muted-foreground">Nothing in progress.</p>}
-            {current.map((e) => <div key={e.course_id} className="rounded-2xl bg-muted p-4 font-semibold">{COURSE_MAP[e.course_id]?.title}</div>)}
+            {current.map((e) => <div key={e.course_id} className="rounded-2xl bg-muted p-4 font-semibold">{(COURSE_MAP[e.course_id] ?? extraTitles[e.course_id])?.title}</div>)}
           </div>
         </div>
       </div>
