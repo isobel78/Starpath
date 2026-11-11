@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { UserPlus, Check, X, Copy, Crown } from "lucide-react";
+import { UserPlus, UserMinus, Check, X, Copy, Crown } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,11 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/data";
+import { removeFriend } from "@/lib/friends";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/squads")({
-  head: () => ({ meta: [{ title: "Friends & squads — Starpath" }, { name: "description", content: "Study with friends, squad goals and XP leaderboards." }, { property: "og:title", content: "Friends & squads — Starpath" }, { property: "og:description", content: "Study with friends, squad goals and XP leaderboards." }] }),
+  head: () => ({ meta: [{ title: "Friends & squads — Starpath" }, { name: "description", content: "Study with friends, squad goals and XP leaderboards." }, { property: "og:title", content: "Friends & squads — Starpath" }, { property: "og:description", content: "Study with friends, squad goals and XP leaderboards." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Squads,
 });
 
@@ -53,6 +55,20 @@ function Squads() {
   const [search, setSearch] = useState("");
   const [squadName, setSquadName] = useState("");
   const [code, setCode] = useState("");
+  const [removing, setRemoving] = useState<{ id: string; name: string } | null>(null);
+  const [removalBusy, setRemovalBusy] = useState(false);
+  const confirmRemoval = async () => {
+    if (!removing || removalBusy) return;
+    setRemovalBusy(true);
+    try {
+      await removeFriend(removing.id);
+      await social.refetch();
+      setRemoving(null);
+      toast.success("Friend removed");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't remove this friend. Please try again.");
+    } finally { setRemovalBusy(false); }
+  };
   const reload = () => social.refetch();
   if (!social.data || !uid) return <AppShell><p className="animate-pulse text-center">Loading…</p></AppShell>;
   const { friendships, squads, members, profiles, xp, awards } = social.data;
@@ -122,7 +138,12 @@ function Squads() {
           <div className="flex gap-2"><Input placeholder="Add by username" value={search} onChange={(e) => setSearch(e.target.value)} className="rounded-full" /><Button onClick={addFriend} className="rounded-full"><UserPlus className="h-4 w-4" /> Add</Button></div>
           {incoming.length > 0 && <div className="space-y-2"><h3 className="font-bold">Requests</h3>{incoming.map((f) => profiles[f.requester] && <Row key={f.id} p={profiles[f.requester]!} right={<><Button size="icon" aria-label="Accept" onClick={() => respond(f.id, true)}><Check className="h-4 w-4" /></Button><Button size="icon" variant="ghost" aria-label="Decline" onClick={() => respond(f.id, false)}><X className="h-4 w-4" /></Button></>} />)}</div>}
           {outgoing.length > 0 && <p className="text-sm text-muted-foreground">Pending: {outgoing.map((f) => "@" + (profiles[f.addressee]?.username ?? "?")).join(", ")}</p>}
-          <div className="space-y-2">{friends.length === 0 ? <p className="text-muted-foreground">No friends yet — share your username!</p> : friends.map((id) => profiles[id] && <Row key={id} p={profiles[id]!} right={<CheerBtns to={id} />} />)}</div>
+          <div className="space-y-2">{friends.length === 0 ? <p className="text-muted-foreground">No friends yet — share your username!</p> : friendships.filter((f) => f.status === "accepted").map((f) => {
+            const id = f.requester === uid ? f.addressee : f.requester;
+            const p = profiles[id];
+            if (!p) return null;
+            return <Row key={f.id} p={p} right={<div className="flex shrink-0 items-center"><CheerBtns to={id} /><Button size="icon" variant="ghost" aria-label={`Remove friend ${p.display_name}`} title="Remove friend" onClick={() => setRemoving({ id: f.id, name: p.display_name })}><UserMinus className="h-4 w-4" /></Button></div>} />;
+          })}</div>
         </TabsContent>
 
         <TabsContent value="squads" className="mt-4 space-y-4">
@@ -150,6 +171,12 @@ function Squads() {
           })}
         </TabsContent>
       </Tabs>
+      <AlertDialog open={!!removing} onOpenChange={(open) => { if (!open && !removalBusy) setRemoving(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader><AlertDialogTitle>Remove {removing?.name} as a friend?</AlertDialogTitle><AlertDialogDescription>This removes the friendship for both of you. Any squads you share will stay unchanged.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter><AlertDialogCancel disabled={removalBusy}>Cancel</AlertDialogCancel><Button variant="destructive" disabled={removalBusy} onClick={confirmRemoval}>{removalBusy ? "Removing…" : "Remove friend"}</Button></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }
