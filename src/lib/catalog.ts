@@ -14,6 +14,8 @@ export interface Course {
   units: string[];
   blurb: string;
   tags?: string[];
+  /** Added by the signed-in learner (only they can see it). */
+  userAdded?: boolean;
 }
 
 export const PROVIDER_COLORS: Record<string, string> = {
@@ -79,8 +81,12 @@ export const BASE_TRACKS: Track[] = TRACKS.map((t) => ({ ...t }));
 
 export interface CatalogRow { kind: string; id: string; data: unknown; hidden: boolean }
 
-/** Rebuild COURSES / COURSE_MAP / TRACKS in place: built-in list + admin edits stored in the database. */
+let lastRows: CatalogRow[] = [];
+let userCourses: Course[] = [];
+
+/** Rebuild COURSES / COURSE_MAP / TRACKS in place: built-in list + admin edits + the learner's own courses. */
 export function applyCatalogRows(rows: CatalogRow[]) {
+  lastRows = rows;
   const merge = <T extends { id: string }>(base: T[], kind: string) => {
     const out = new Map(base.map((x) => [x.id, x]));
     for (const r of rows.filter((x) => x.kind === kind)) {
@@ -89,8 +95,17 @@ export function applyCatalogRows(rows: CatalogRow[]) {
     }
     return [...out.values()];
   };
-  COURSES.splice(0, COURSES.length, ...merge(BASE_COURSES, "course"));
+  COURSES.splice(0, COURSES.length, ...merge(BASE_COURSES, "course"), ...userCourses);
   for (const k of Object.keys(COURSE_MAP)) delete COURSE_MAP[k];
   for (const c of COURSES) COURSE_MAP[c.id] = c;
   TRACKS.splice(0, TRACKS.length, ...merge(BASE_TRACKS, "track"));
+}
+
+export interface UserCourseRow { id: string; data: unknown }
+
+/** Adds the learner's own courses (highlighted, no prerequisites) to the shared course list. */
+export function applyUserCourses(rows: UserCourseRow[]) {
+  userCourses = rows.map((r) => ({ prereqs: [], tags: [], ...(r.data as Partial<Course>), id: r.id, userAdded: true } as Course))
+    .filter((c) => c.title && c.url && Array.isArray(c.units) && c.units.length > 0);
+  applyCatalogRows(lastRows);
 }
