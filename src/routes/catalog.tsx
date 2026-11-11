@@ -9,12 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { APPROVED_SITES, providerForUrl } from "@/lib/providers";
 import { draftCourseFromUrl, type CourseDraft } from "@/lib/course-import.functions";
-import { KNOWN_AREAS } from "@/lib/catalog";
+
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { COURSES, COURSE_MAP, PROVIDER_COLORS, type Area, type Provider } from "@/lib/catalog";
+import { COURSES, COURSE_MAP, PROVIDER_COLORS, KNOWN_AREAS, type Area, type Provider } from "@/lib/catalog";
 import { useCatalog } from "@/lib/catalog-store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Award } from "lucide-react";
