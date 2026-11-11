@@ -478,6 +478,10 @@ export type Database = {
         Returns: undefined
       }
       shares_squad: { Args: { _a: string; _b: string }; Returns: boolean }
+      uncomplete_unit: {
+        Args: { _course: string; _unit: number }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"

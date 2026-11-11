@@ -43,6 +43,13 @@
       "when": 1794435915263,
       "tag": "0005_profiles_tz_grant",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794437268694,
+      "tag": "0006_undo_today_lessons",
+      "breakpoints": true
     }
   ]
 }
