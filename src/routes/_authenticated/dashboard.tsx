@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Flame, Star, ExternalLink, Check, Clock, Pencil, Sparkles, X } from "lucide-react";
@@ -14,9 +14,10 @@ import { levelFor, unitsFor } from "@/lib/schedule";
 import { COURSE_MAP } from "@/lib/catalog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { finishesCourse } from "@/lib/lesson-progress";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Today — Starpath" }, { name: "description", content: "Your daily study goals, streak and XP." }, { property: "og:title", content: "Today — Starpath" }, { property: "og:description", content: "Your daily study goals, streak and XP." }] }),
+  head: () => ({ meta: [{ title: "Today — Starpath" }, { name: "description", content: "Your daily study goals, streak and XP." }, { property: "og:title", content: "Today — Starpath" }, { property: "og:description", content: "Your daily study goals, streak and XP." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Dashboard,
 });
 
@@ -26,6 +27,8 @@ function Dashboard() {
   const { data, user, isLoading } = useMyData();
   useCatalog();
   const refresh = useRefreshMe();
+  const navigate = useNavigate();
+  const [lessonBusy, setLessonBusy] = useState(false);
   const [mood, setMood] = useState("🙂");
   const cheers = useQuery({
     queryKey: ["cheers-in", user?.id], enabled: !!user,
@@ -55,10 +58,26 @@ function Dashboard() {
   const lv = levelFor(profile.xp);
 
   const complete = async (courseId: string, index: number, minutes: number) => {
-    const { error } = await supabase.rpc("complete_unit", { _course: courseId, _unit: index, _minutes: minutes });
-    if (error) { toast.error(error.message); return; }
-    toast.success(`+${10 + Math.floor(minutes / 6)} XP! Lesson done ⭐`);
-    refresh();
+    if (lessonBusy) return;
+    setLessonBusy(true);
+    try {
+      const { error } = await supabase.rpc("complete_unit", { _course: courseId, _unit: index, _minutes: minutes });
+      if (error) { toast.error(error.message); return; }
+      const finished = finishesCourse(courseId, index, COURSE_MAP[courseId]?.units.length ?? 0, data.completions);
+      await refresh();
+      toast.success(finished ? "All lessons done! Add your certificate 🎓" : `+${10 + Math.floor(Math.min(240, Math.max(5, minutes)) / 6)} XP! Lesson done ⭐`);
+      if (finished) await navigate({ to: "/roadmap", search: { course: courseId } });
+    } finally { setLessonBusy(false); }
+  };
+  const undo = async (courseId: string, index: number) => {
+    if (lessonBusy) return;
+    setLessonBusy(true);
+    try {
+      const { error } = await supabase.rpc("uncomplete_unit", { _course: courseId, _unit: index });
+      if (error) { toast.error(error.message); return; }
+      await refresh();
+      toast.success("Lesson unchecked — XP updated");
+    } finally { setLessonBusy(false); }
   };
   const checkin = async () => {
     const { error } = await supabase.rpc("daily_checkin", { _mood: mood, _note: "" });
@@ -117,13 +136,13 @@ function Dashboard() {
           <div className="mt-4 space-y-3">
             {doneToday.map((c) => (
               <div key={c.id} className="flex items-center gap-3 rounded-2xl bg-muted p-4 opacity-70">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground"><Check className="h-5 w-5" /></span>
+                <Button size="icon" disabled={lessonBusy} aria-label={`Uncheck ${COURSE_MAP[c.course_id]?.units[c.unit_index] ?? "lesson"}`} aria-pressed={true} title="Uncheck lesson" onClick={() => undo(c.course_id, c.unit_index)} className="h-9 w-9 shrink-0 rounded-full"><Check className="h-5 w-5" /></Button>
                 <div className="flex-1 line-through">{COURSE_MAP[c.course_id]?.units[c.unit_index]}</div>
               </div>
             ))}
             {todayUnits.map((u) => (
               <div key={`${u.courseId}-${u.index}`} className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4">
-                <button aria-label="Mark done" onClick={() => complete(u.courseId, u.index, u.minutes)} className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-primary text-primary transition hover:bg-primary hover:text-primary-foreground"><Check className="h-5 w-5" /></button>
+                <Button size="icon" variant="outline" disabled={lessonBusy} aria-label="Mark done" onClick={() => complete(u.courseId, u.index, u.minutes)} className="h-9 w-9 shrink-0 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"><Check className="h-5 w-5" /></Button>
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold">{u.title}</div>
                   <div className="text-xs text-muted-foreground">{COURSE_MAP[u.courseId]?.title} · {COURSE_MAP[u.courseId]?.provider}</div>
@@ -144,7 +163,7 @@ function Dashboard() {
           <div className="mt-3 space-y-3">
             {extraUnits.map((u) => { const c = COURSE_MAP[u.courseId]; return (
               <div key={`${u.courseId}-${u.index}`} className={`flex flex-wrap items-center gap-3 rounded-2xl border p-4 ${c?.userAdded ? "border-star bg-star/15" : "border-border bg-card"}`}>
-                <button aria-label="Mark done" onClick={() => complete(u.courseId, u.index, u.minutes)} className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-accent text-accent transition hover:bg-accent hover:text-accent-foreground"><Check className="h-5 w-5" /></button>
+                <Button size="icon" variant="outline" disabled={lessonBusy} aria-label="Mark done" onClick={() => complete(u.courseId, u.index, u.minutes)} className="h-9 w-9 shrink-0 rounded-full border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground"><Check className="h-5 w-5" /></Button>
                 <div className="min-w-0 flex-1"><div className="font-semibold">{u.title}</div><div className="text-xs text-muted-foreground">{c?.title} · {c?.provider}</div></div>
                 <span className="flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs font-bold"><Clock className="h-3.5 w-3.5" />{u.minutes} min</span>
                 <Button asChild size="sm" variant="outline" className="rounded-full"><a href={u.url} target="_blank" rel="noreferrer">Open <ExternalLink className="h-3.5 w-3.5" /></a></Button>

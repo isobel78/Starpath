@@ -15,11 +15,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCatalog } from "@/lib/catalog-store";
 
 export const Route = createFileRoute("/roadmap")({
+  validateSearch: (search: Record<string, unknown>): { course?: string } => ({ course: typeof search.course === "string" ? search.course : undefined }),
   head: () => ({ meta: [{ title: "My Starpath" }, { name: "description", content: "Pick a career track or build your own course playlist." }, { property: "og:title", content: "My Starpath" }, { property: "og:description", content: "Pick a career track or build your own course playlist." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Roadmap,
 });
 
 function Roadmap() {
+  const { course: selectedCourse } = Route.useSearch();
   const { data, user } = useMyData();
   const refresh = useRefreshMe();
   const [mode, setMode] = useState<"hours" | "date">("hours");
@@ -29,6 +31,10 @@ function Roadmap() {
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
   useCatalog();
+  useEffect(() => {
+    if (!selectedCourse || !data) return;
+    document.getElementById(`course-${selectedCourse}`)?.scrollIntoView({ block: "center" });
+  }, [selectedCourse, data]);
   useEffect(() => {
     if (!data) return;
     setMode(data.profile.pace_mode === "date" ? "date" : "hours");
@@ -158,7 +164,7 @@ function Roadmap() {
             const doneN = me.completions.filter((x) => x.course_id === c.id).length;
             const pct = Math.round((doneN / c.units.length) * 100);
             return (
-              <div key={e.id} className={`rounded-3xl border p-4 ${c.userAdded ? "border-star bg-star/15" : "border-border bg-card"}`}>
+              <div id={`course-${c.id}`} key={e.id} className={`rounded-3xl border p-4 ${selectedCourse === c.id ? "ring-2 ring-primary" : ""} ${c.userAdded ? "border-star bg-star/15" : "border-border bg-card"}`}>
                 <div className="flex items-center gap-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sun font-display font-bold text-primary-foreground">{i + 1}</span>
                   <div className="min-w-0 flex-1">
@@ -173,7 +179,7 @@ function Roadmap() {
                   </div>
                 </div>
                 <Progress value={pct} className="mt-3 h-2" />
-                {(pct === 100 || e.completed_at) && <CertDialog courseId={c.id} current={e.certificate_url} done={!!e.completed_at} onSaved={refresh} />}
+                {(pct === 100 || e.completed_at) && <CertDialog courseId={c.id} current={e.certificate_url} done={!!e.completed_at} defaultOpen={selectedCourse === c.id && !e.completed_at} onSaved={refresh} />}
               </div>
             );
           })}
@@ -187,13 +193,14 @@ function Roadmap() {
           <div className="mt-3 space-y-2">
             {extra.length === 0 && <p className="text-sm text-muted-foreground">Nothing here yet — add one from the <Link to="/catalog" className="font-bold text-primary">catalog</Link>.</p>}
             {extra.map((e, i) => { const c = COURSE_MAP[e.course_id]; if (!c) return null; const doneN = me.completions.filter((x) => x.course_id === c.id).length; return (
-              <div key={e.id} className={`flex items-center gap-3 rounded-2xl border p-3 ${c.userAdded ? "border-star bg-star/15" : "border-border bg-card"}`}>
+              <div id={`course-${c.id}`} key={e.id} className={`flex flex-wrap items-center gap-3 rounded-2xl border p-3 ${selectedCourse === c.id ? "ring-2 ring-primary" : ""} ${c.userAdded ? "border-star bg-star/15" : "border-border bg-card"}`}>
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-accent-foreground">{i + 1}</span>
                 <div className="min-w-0 flex-1"><div className="font-semibold">{c.title} {e.completed_at && "🎓"}</div><div className="text-xs text-muted-foreground">{c.provider} · {doneN}/{c.units.length} units</div></div>
                 <Button size="icon" variant="ghost" aria-label="Move up" onClick={() => moveIn(extra, i, -1)}><ArrowUp className="h-4 w-4" /></Button>
                 <Button size="icon" variant="ghost" aria-label="Move down" onClick={() => moveIn(extra, i, 1)}><ArrowDown className="h-4 w-4" /></Button>
                 <Button size="icon" variant="ghost" aria-label="Move to Starpath" title="Move to Starpath" onClick={() => setExtra(c.id, false)}><MapIcon className="h-4 w-4" /></Button>
                 <Button size="icon" variant="ghost" aria-label="Remove" onClick={() => remove(c.id)}><Trash2 className="h-4 w-4" /></Button>
+                {(doneN === c.units.length || e.completed_at) && <div className="w-full"><CertDialog courseId={c.id} current={e.certificate_url} done={!!e.completed_at} defaultOpen={selectedCourse === c.id && !e.completed_at} onSaved={refresh} /></div>}
               </div>); })}
           </div>
         </div>
@@ -210,9 +217,9 @@ function Roadmap() {
   );
 }
 
-function CertDialog({ courseId, current, done, onSaved }: { courseId: string; current: string | null; done: boolean; onSaved: () => void }) {
+function CertDialog({ courseId, current, done, onSaved, defaultOpen = false }: { courseId: string; current: string | null; done: boolean; onSaved: () => void; defaultOpen?: boolean }) {
   const [url, setUrl] = useState(current ?? "");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const save = async () => {
     if (url && !/^https:\/\/\S+$/.test(url)) { toast.error("Use a full https:// link"); return; }
     const { error } = await supabase.rpc("complete_course", { _course: courseId, _cert: url });
