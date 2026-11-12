@@ -1,4 +1,7 @@
 # Roadmap
+- [ ] Add UI/UX & Product Design track with verified UX and Figma sources
+- [ ] Order tracks: Frontend, Backend, Full Stack, Game, UI/UX, Database, Computer Science
+- [ ] Update homepage learning blurb for the additional tracks
 - [x] Add Game Development track with verified source courses
 - [x] Forgot-password request and public password-reset page
 - [x] Unified completed-course pills at the bottom, sorted by date/name/source
