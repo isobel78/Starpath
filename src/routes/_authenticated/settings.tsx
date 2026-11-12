@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Upload, ExternalLink, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
+import { AvatarCropDialog } from "@/components/AvatarCropDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,27 +22,11 @@ export const Route = createFileRoute("/_authenticated/settings")({
 
 const AVATARS = ["🚀", "🦄", "🐱", "🦊", "🐙", "🐼", "🐸", "🐧", "🦋", "🐝", "🐲", "👾", "🧙", "🌈", "🌸", "🍩", "🐻", "🐰", "🦖", "🐳"];
 
-/** Shrinks an uploaded photo to a 256px square so it can be stored with the profile. */
-function toAvatarDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const size = 256, canvas = document.createElement("canvas");
-      canvas.width = canvas.height = size;
-      const s = Math.min(img.width, img.height);
-      canvas.getContext("2d")!.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
-      URL.revokeObjectURL(img.src);
-      resolve(canvas.toDataURL("image/jpeg", 0.85));
-    };
-    img.onerror = () => reject(new Error("Couldn't read that image"));
-    img.src = URL.createObjectURL(file);
-  });
-}
-
 function SettingsPage() {
   const { data, user } = useMyData();
   const refresh = useRefreshMe();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [f, setF] = useState({ username: "", display_name: "", bio: "", avatar_emoji: "🚀", avatar_url: null as string | null });
   const [pw, setPw] = useState({ a: "", b: "" });
   const [email, setEmail] = useState("");
@@ -66,8 +51,10 @@ function SettingsPage() {
   const upload = async (file?: File) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) { toast.error("Please pick an image file"); return; }
-    try { setF({ ...f, avatar_url: await toAvatarDataUrl(file) }); toast("Looking good! Press Save to keep it."); }
-    catch (e) { toast.error((e as Error).message); }
+    const reader = new FileReader();
+    reader.onload = () => setCropSrc(reader.result as string);
+    reader.onerror = () => toast.error("Couldn't read that image");
+    reader.readAsDataURL(file);
   };
   const changePw = async () => {
     if (pw.a.length < 6) { toast.error("Password needs at least 6 characters"); return; }
@@ -109,7 +96,8 @@ function SettingsPage() {
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" className="rounded-full" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4" /> Upload photo</Button>
             {f.avatar_url && <Button variant="ghost" className="rounded-full" onClick={() => setF({ ...f, avatar_url: null })}>Use a character instead</Button>}
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => upload(e.target.files?.[0])} />
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { upload(e.target.files?.[0]); e.target.value = ""; }} />
+            <AvatarCropDialog src={cropSrc} onCancel={() => setCropSrc(null)} onDone={(url) => { setCropSrc(null); setF((p) => ({ ...p, avatar_url: url })); toast("Looking good! Press Save to keep it."); }} />
           </div>
         </div>
         <div className="mt-4 grid grid-cols-5 gap-3 sm:grid-cols-10">
