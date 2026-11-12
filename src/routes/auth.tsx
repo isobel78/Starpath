@@ -18,6 +18,8 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Sign in or create your Starpath account." },
       { property: "og:title", content: "Sign in — Starpath" },
       { property: "og:description", content: "Sign in or create your Starpath account." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   validateSearch: (s: Record<string, unknown>): { mode?: "up" } => (s["mode"] === "up" ? { mode: "up" } : {}),
@@ -35,6 +37,8 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [forgot, setForgot] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => data.user && navigate({ to: "/dashboard" }));
@@ -44,6 +48,21 @@ function AuthPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (forgot) {
+      setBusy(true);
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) { toast.error(error.message); return; }
+        setResetSent(true);
+      } catch {
+        toast.error("Couldn't send the reset link. Please try again.");
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     if (mode === "up" && !name.trim()) { toast.error("Pick a display name"); return; }
     setBusy(true);
     setRemember(keep);
@@ -66,25 +85,26 @@ function AuthPage() {
       <div className="w-full max-w-md rounded-[2rem] bg-card p-8 text-card-foreground shadow-glow">
         <div className="mb-6 text-center">
           <Star className="mx-auto h-12 w-12 animate-twinkle fill-star text-star" />
-          <h1 className="mt-2 text-3xl font-bold">{mode === "in" ? "Welcome back!" : "Join Starpath"}</h1>
+          <h1 className="mt-2 text-3xl font-bold">{forgot ? "Reset your password" : mode === "in" ? "Welcome back!" : "Join Starpath"}</h1>
         </div>
-        <div className="space-y-3">
+        {!forgot && <><div className="space-y-3">
           <button type="button" onClick={() => oauth("google")} className="flex h-11 w-full items-center justify-center gap-[10px] rounded-full border px-3 text-sm font-medium" style={{ background: "#FFFFFF", borderColor: "#747775", color: "#1F1F1F" }}>
             {G} Continue with Google
           </button>
           <button type="button" className="lovable-auth-button w-full" onClick={() => oauth("lovable")}>Continue with Lovable</button>
         </div>
-        <div className="my-5 text-center text-xs font-bold uppercase text-muted-foreground">or with email</div>
-        <form onSubmit={submit} className="space-y-4">
-          {mode === "up" && <div><Label htmlFor="name">Display name</Label><Input id="name" required maxLength={40} placeholder="What should we call you?" value={name} onChange={(e) => setName(e.target.value)} /></div>}
+        <div className="my-5 text-center text-xs font-bold uppercase text-muted-foreground">or with email</div></>}
+        {forgot && resetSent ? <p role="status" className="text-center text-sm text-muted-foreground">If an account exists for that email, you'll receive a link to set a new password. Check your inbox and spam folder.</p> : <form onSubmit={submit} className="space-y-4">
+          {!forgot && mode === "up" && <div><Label htmlFor="name">Display name</Label><Input id="name" required maxLength={40} placeholder="What should we call you?" value={name} onChange={(e) => setName(e.target.value)} /></div>}
           <div><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-          <div><Label htmlFor="pw">Password</Label><Input id="pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
-          <label className="flex items-center gap-2 text-sm font-semibold"><Checkbox checked={keep} onCheckedChange={(v) => setKeep(v === true)} /> Keep me signed in</label>
-          <Button type="submit" disabled={busy} className="w-full rounded-full" size="lg">{mode === "in" ? "Sign in" : "Create account"}</Button>
-        </form>
-        <button className="mt-4 w-full text-sm font-semibold text-primary" onClick={() => setMode(mode === "in" ? "up" : "in")}>
+          {!forgot && <><div><Label htmlFor="pw">Password</Label><Input id="pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+          {mode === "in" && <Button type="button" variant="link" className="h-auto p-0" onClick={() => { setForgot(true); setResetSent(false); }}>Forgot password?</Button>}
+          <label className="flex items-center gap-2 text-sm font-semibold"><Checkbox checked={keep} onCheckedChange={(v) => setKeep(v === true)} /> Keep me signed in</label></>}
+          <Button type="submit" disabled={busy} className="w-full rounded-full" size="lg">{busy ? "Please wait…" : forgot ? "Send reset link" : mode === "in" ? "Sign in" : "Create account"}</Button>
+        </form>}
+        {forgot ? <Button variant="link" disabled={busy} className="mt-4 w-full" onClick={() => { setForgot(false); setResetSent(false); }}>Back to sign in</Button> : <Button variant="link" className="mt-4 w-full" onClick={() => setMode(mode === "in" ? "up" : "in")}>
           {mode === "in" ? "New here? Create an account" : "Already have an account? Sign in"}
-        </button>
+        </Button>}
       </div>
     </div>
   );

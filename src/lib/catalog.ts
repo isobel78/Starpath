@@ -1,5 +1,5 @@
 export const KNOWN_PROVIDERS = ["boot.dev", "freeCodeCamp", "Exercism", "The Odin Project", "CS50", "Roadmap.sh"];
-export const KNOWN_AREAS = ["Languages", "Frontend", "Backend", "Databases", "CS Fundamentals", "DevOps"];
+export const KNOWN_AREAS = ["Languages", "Frontend", "Backend", "Databases", "CS Fundamentals", "DevOps", "Game Development"];
 export type Provider = string;
 export type Area = string;
 
@@ -30,6 +30,8 @@ export const PROVIDER_COLORS: Record<string, string> = {
 const c = (x: Course) => x;
 
 export const COURSES: Course[] = [
+  c({ id: "cs50-games", title: "CS50's Introduction to 2D Game Development", provider: "CS50", area: "Game Development", hours: 80, url: "https://cs50.harvard.edu/games/", prereqs: ["cs50x"], blurb: "Build 2D games with Lua and LÖVE: graphics, animation, sound and collision detection. Free OpenCourseWare with eight game projects and a final project.", units: ["Pong", "Flappy Bird", "Breakout", "Match 3", "Super Mario Bros.", "Legend of Zelda", "Angry Birds", "Pokémon", "Final Project"] }),
+  c({ id: "rm-game-dev", title: "Game Developer Roadmap", provider: "Roadmap.sh", area: "Game Development", hours: 40, url: "https://roadmap.sh/game-developer", prereqs: ["cs50-games"], blurb: "Explore a community guide to game engines, game math, graphics, physics and the skills for a game-development career.", units: ["Game Development Foundations", "Game Math", "Game Engines", "Game Physics", "Graphics and Rendering", "Game AI", "Audio", "Networking", "Optimization", "Publishing Your Game"] }),
   c({ id: "cs50x", title: "CS50x: Introduction to Computer Science", provider: "CS50", area: "CS Fundamentals", hours: 100, url: "https://cs50.harvard.edu/x/", prereqs: [], blurb: "Harvard's legendary intro: C, algorithms, memory, Python, SQL and the web.", units: ["Week 0: Scratch", "Week 1: C", "Week 2: Arrays", "Week 3: Algorithms", "Week 4: Memory", "Week 5: Data Structures", "Week 6: Python", "Week 7: SQL", "Week 8: HTML, CSS, JavaScript", "Week 9: Flask", "Final Project"] }),
   c({ id: "cs50p", title: "CS50P: Programming with Python", provider: "CS50", area: "Languages", hours: 60, url: "https://cs50.harvard.edu/python/", prereqs: [], blurb: "Learn Python from functions to OOP with problem sets.", units: ["Functions & Variables", "Conditionals", "Loops", "Exceptions", "Libraries", "Unit Tests", "File I/O", "Regular Expressions", "Object-Oriented Programming", "Final Project"] }),
   c({ id: "cs50w", title: "CS50W: Web Programming with Python & JS", provider: "CS50", area: "Backend", hours: 80, url: "https://cs50.harvard.edu/web/", prereqs: ["cs50x"], blurb: "Django, JavaScript, SQL, testing and scalability.", units: ["HTML & CSS", "Git", "Python", "Django", "SQL, Models & Migrations", "JavaScript", "User Interfaces", "Testing & CI/CD", "Scalability & Security", "Capstone"] }),
@@ -70,6 +72,7 @@ export const BASE_COURSES: Course[] = [...COURSES];
 export interface Track { id: string; title: string; emoji: string; description: string; courses: string[] }
 
 export const TRACKS: Track[] = [
+  { id: "game-development", title: "Game Development", emoji: "🎮", description: "From coding foundations to playable 2D games with Lua and LÖVE, then explore engines and game-development careers.", courses: ["cs50x", "cs50-games", "rm-game-dev"] },
   { id: "frontend", title: "Frontend Wizard", emoji: "🎨", description: "HTML, CSS, JavaScript and React — build gorgeous interfaces.", courses: ["odin-foundations", "fcc-rwd", "fcc-js", "ex-js", "odin-js", "odin-react", "ex-ts", "rm-frontend"] },
   { id: "backend", title: "Backend Builder", emoji: "⚙️", description: "Python, Go, SQL and servers — power the web from behind.", courses: ["boot-python", "boot-linux", "boot-git", "boot-sql", "boot-go", "boot-http", "boot-docker", "rm-backend"] },
   { id: "fullstack", title: "Full Stack Hero", emoji: "🦸", description: "Front to back with The Odin Project and friends.", courses: ["odin-foundations", "fcc-js", "odin-js", "odin-react", "boot-sql", "odin-node", "boot-docker", "rm-backend"] },

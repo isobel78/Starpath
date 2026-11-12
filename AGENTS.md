@@ -30,6 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- Password recovery uses the public `/reset-password` page, validates a recovery link/session, and updates only the new password; ordinary sign-in sessions cannot open its form. Why: email recovery must work without redirecting to Today or requiring the old password.
 - Starpath sections use `groupCourses` to separate completed enrollments from active and Extra Credit courses and sort the unified completion list. Why: prior and newly completed courses must appear together without remaining in active lists.
 - Friend removal deletes only the selected accepted friendship through the caller's RLS-scoped client, then refreshes social data; shared squad memberships are untouched. Why: unlinking friends must not remove squad participation.
 - Built-in courses/tracks live in `src/lib/catalog.ts`; admin edits are stored as overrides in `catalog_items` and merged in place by `useCatalog()` (pages showing courses must call it). Why: providers have no shared public API, and the admin can still curate without code changes.

@@ -1,10 +1,16 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { applyCatalogRows, COURSE_MAP, COURSES } from "./catalog";
+import { applyCatalogRows, COURSE_MAP, COURSES, TRACKS } from "./catalog";
 import { computePlan } from "./plan";
 
 afterEach(() => applyCatalogRows([]));
 
 describe("catalog rules", () => {
+  it("includes a Game Development track with foundations before game projects", () => {
+    expect(TRACKS.find((track) => track.id === "game-development")?.courses).toEqual(["cs50x", "cs50-games", "rm-game-dev"]);
+    expect(COURSE_MAP["cs50-games"]?.url).toBe("https://cs50.harvard.edu/games/");
+    expect(COURSE_MAP["cs50-games"]?.units).toHaveLength(9);
+    expect(COURSE_MAP["rm-game-dev"]?.url).toBe("https://roadmap.sh/game-developer");
+  });
   it("freeCodeCamp Responsive Web Design points at the current v9 course", () => {
     expect(COURSE_MAP["fcc-rwd"]!.url).toBe("https://www.freecodecamp.org/learn/responsive-web-design-v9/");
   });

@@ -7,7 +7,7 @@ import { computePlan } from "@/lib/plan";
 import { COURSE_MAP } from "@/lib/catalog";
 
 export const Route = createFileRoute("/_authenticated/calendar")({
-  head: () => ({ meta: [{ title: "This week — Starpath" }, { name: "description", content: "Your auto-balancing weekly study calendar." }, { property: "og:title", content: "This week — Starpath" }, { property: "og:description", content: "Your auto-balancing weekly study calendar." }] }),
+  head: () => ({ meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "This week — Starpath" }, { name: "description", content: "Your auto-balancing weekly study calendar." }, { property: "og:title", content: "This week — Starpath" }, { property: "og:description", content: "Your auto-balancing weekly study calendar." }] }),
   component: CalendarPage,
 });
 
