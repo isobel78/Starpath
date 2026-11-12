@@ -57,6 +57,13 @@
       "when": 1794500614846,
       "tag": "0007_harden_local_day_and_squad_goal",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794501743764,
+      "tag": "0008_squad_xp_since_join",
+      "breakpoints": true
     }
   ]
 }
