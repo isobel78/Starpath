@@ -41,6 +41,7 @@ function AdminPage() {
   const [editCourse, setEditCourse] = useState<Course | null>(null);
   const [editTrack, setEditTrack] = useState<Track | null>(null);
   const [q, setQ] = useState("");
+  const [sort, setSort] = useState<"title" | "provider" | "area" | "hours">("title");
 
   const hidden = useMemo(() => rows.filter((r) => r.hidden && !(r.data as { deleted?: boolean })?.deleted), [rows]);
   if (!ready || (user && rowsQ.isLoading)) return <AppShell><p className="animate-pulse text-center">Loading…</p></AppShell>;
@@ -65,7 +66,7 @@ function AdminPage() {
   };
   const isEdited = (kind: string, id: string) => rows.some((r) => r.kind === kind && r.id === id);
 
-  const courses = COURSES.filter((c) => !c.userAdded).filter((c) => (c.title + c.provider + c.area).toLowerCase().includes(q.toLowerCase()));
+  const courses = COURSES.filter((c) => !c.userAdded).filter((c) => (c.title + c.provider + c.area).toLowerCase().includes(q.toLowerCase())).sort((a, b) => sort === "hours" ? a.hours - b.hours || a.title.localeCompare(b.title) : String(a[sort]).localeCompare(String(b[sort])) || a.title.localeCompare(b.title));
   const blankCourse: Course = { id: "", title: "", provider: "freeCodeCamp", area: "Frontend", hours: 10, url: "https://", prereqs: [], units: [], blurb: "", tags: [] };
 
   return (
@@ -96,7 +97,12 @@ function AdminPage() {
         </div>
       ) : tab === "courses" ? (
         <>
-          <Input placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} className="mt-4 rounded-full" />
+          <div className="mt-4 flex gap-2">
+            <Input placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} className="flex-1 rounded-full" />
+            <select aria-label="Sort courses" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="h-10 rounded-full border border-input bg-background px-3 text-sm font-semibold">
+              <option value="title">Sort: Name</option><option value="provider">Sort: Platform</option><option value="area">Sort: Area</option><option value="hours">Sort: Hours</option>
+            </select>
+          </div>
           <div className="mt-4 space-y-2">
             {courses.map((c) => (
               <div key={c.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3">
