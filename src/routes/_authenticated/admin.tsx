@@ -42,7 +42,7 @@ function AdminPage() {
   const [editTrack, setEditTrack] = useState<Track | null>(null);
   const [q, setQ] = useState("");
 
-  const hidden = useMemo(() => rows.filter((r) => r.hidden), [rows]);
+  const hidden = useMemo(() => rows.filter((r) => r.hidden && !(r.data as { deleted?: boolean })?.deleted), [rows]);
   if (!ready || (user && rowsQ.isLoading)) return <AppShell><p className="animate-pulse text-center">Loading…</p></AppShell>;
   if (!isAdmin) return <AppShell><p className="text-center text-xl">This area is for the Starpath admin only 🌙</p></AppShell>;
 
@@ -57,6 +57,12 @@ function AdminPage() {
     if (error) toast.error(error.message); else { toast.success("Restored original"); reload(); }
   };
   const isBase = (kind: string, id: string) => (kind === "course" ? BASE_COURSES : BASE_TRACKS).some((x) => x.id === id);
+  const removeCourse = async (c: Course) => {
+    if (!window.confirm(`Delete "${c.title}" from the catalog for everyone? This can't be undone here.`)) return;
+    if (isBase("course", c.id)) { if (await upsert("course", c.id, { ...c, deleted: true }, true)) toast.success("Course deleted"); return; }
+    const { error } = await supabase.from("catalog_items").delete().eq("kind", "course").eq("id", c.id);
+    if (error) toast.error(error.message); else { toast.success("Course deleted"); reload(); }
+  };
   const isEdited = (kind: string, id: string) => rows.some((r) => r.kind === kind && r.id === id);
 
   const courses = COURSES.filter((c) => !c.userAdded).filter((c) => (c.title + c.provider + c.area).toLowerCase().includes(q.toLowerCase()));
@@ -100,6 +106,7 @@ function AdminPage() {
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => setEditCourse(c)}><Pencil className="h-4 w-4" /> Edit</Button>
                 <Button size="sm" variant="ghost" onClick={() => upsert("course", c.id, c, true).then((ok) => ok && toast.success("Hidden from catalog"))}><EyeOff className="h-4 w-4" /> Hide</Button>
+                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeCourse(c)}><Trash2 className="h-4 w-4" /> Delete</Button>
                 {isBase("course", c.id) && isEdited("course", c.id) && <Button size="sm" variant="ghost" onClick={() => reset("course", c.id)}><RotateCcw className="h-4 w-4" /> Reset</Button>}
               </div>
             ))}
