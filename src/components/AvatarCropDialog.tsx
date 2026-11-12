@@ -33,7 +33,7 @@ export function AvatarCropDialog({ src, onCancel, onDone }: { src: string | null
             onCropChange={setCrop} onZoomChange={setZoom} onCropComplete={(_, px) => setArea(px)} />}
         </div>
         <div className="flex items-center gap-3"><span className="text-sm">Zoom</span>
-          <Slider aria-label="Zoom" min={1} max={3} step={0.05} value={[zoom]} onValueChange={(v) => setZoom(v[0])} /></div>
+          <Slider aria-label="Zoom" min={1} max={3} step={0.05} value={[zoom]} onValueChange={(v) => setZoom(v[0] ?? 1)} /></div>
         <DialogFooter>
           <Button variant="ghost" className="rounded-full" onClick={onCancel}>Cancel</Button>
           <Button className="rounded-full" disabled={!area} onClick={async () => { if (src && area) onDone(await cropToDataUrl(src, area)); }}>Use photo</Button>
