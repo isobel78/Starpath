@@ -102,9 +102,20 @@ export function applyCatalogRows(rows: CatalogRow[]) {
     }
     return [...out.values()];
   };
-  COURSES.splice(0, COURSES.length, ...merge(BASE_COURSES, "course"), ...userCourses);
+  const shared = merge(BASE_COURSES, "course");
+  const norm = (u: string) => u.trim().toLowerCase().replace(/[?#].*$/, "").replace(/\/+$/, "");
+  const byId = new Map(shared.map((c) => [c.id, c]));
+  const byUrl = new Map(shared.map((c) => [norm(c.url), c]));
+  // A learner course promoted into the catalog (same id or same link) appears only once, as the catalog entry.
+  const aliases: Course[] = [];
+  const own = userCourses.filter((u) => {
+    const match = byId.get(u.id) ?? byUrl.get(norm(u.url));
+    if (match && match.id !== u.id) aliases.push({ ...match, id: u.id });
+    return !match;
+  });
+  COURSES.splice(0, COURSES.length, ...shared, ...own);
   for (const k of Object.keys(COURSE_MAP)) delete COURSE_MAP[k];
-  for (const c of COURSES) COURSE_MAP[c.id] = c;
+  for (const c of [...aliases, ...COURSES]) COURSE_MAP[c.id] = c;
   TRACKS.splice(0, TRACKS.length, ...merge(BASE_TRACKS, "track"));
 }
 
