@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export const Route = createFileRoute("/roadmap")({
   staticData: { sitemap: true },
   validateSearch: (search: Record<string, unknown>): { course?: string } => (typeof search['course'] === "string" ? { course: search['course'] } : {}),
-  head: () => ({ meta: [{ title: "My Starpath" }, { name: "description", content: "Pick a career track or build your own course playlist." }, { property: "og:title", content: "My Starpath" }, { property: "og:description", content: "Pick a career track or build your own course playlist." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  head: () => ({ meta: [{ title: "My Starpath" }, { name: "description", content: "Pick a career track or build your own course playlist." }, { property: "og:title", content: "My Starpath" }, { property: "og:description", content: "Pick a career track or build your own course playlist." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { property: "og:image", content: "https://starpath.atlantadaniel.com/og-starpath.jpg" }, { name: "twitter:image", content: "https://starpath.atlantadaniel.com/og-starpath.jpg" }] }),
   component: Roadmap,
 });
 

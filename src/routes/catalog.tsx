@@ -26,7 +26,9 @@ export const Route = createFileRoute("/catalog")({
   head: () => ({
     meta: [
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:image", content: "https://starpath.atlantadaniel.com/og-catalog.jpg" },
+      { name: "twitter:image", content: "https://starpath.atlantadaniel.com/og-catalog.jpg" },
       { title: "Course catalog — Starpath" },
       { name: "description", content: "Curated courses from boot.dev, freeCodeCamp, Exercism, The Odin Project, CS50 and Roadmap.sh." },
       { property: "og:title", content: "Course catalog — Starpath" },
