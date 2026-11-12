@@ -11,7 +11,7 @@ import { levelFor } from "@/lib/schedule";
 import { Progress } from "@/components/ui/progress";
 
 const getProfile = createServerFn({ method: "GET" })
-  .inputValidator((u: string) => u)
+  .validator((u: string) => u)
   .handler(async ({ data: username }) => {
     const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
     const sb = createClient<Database>(process.env["SUPABASE_URL"]!, key, {
