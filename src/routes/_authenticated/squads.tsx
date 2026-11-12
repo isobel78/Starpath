@@ -15,6 +15,7 @@ import { squadXp, type XpEv } from "@/lib/squad-xp";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/squads")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "Friends & squads — Starpath" }, { name: "description", content: "Study with friends, squad goals and XP leaderboards." }, { property: "og:title", content: "Friends & squads — Starpath" }, { property: "og:description", content: "Study with friends, squad goals and XP leaderboards." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Squads,
 });

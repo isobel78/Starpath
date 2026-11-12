@@ -22,6 +22,7 @@ import { useMyData, useRefreshMe } from "@/lib/data";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/catalog")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { property: "og:type", content: "website" },
