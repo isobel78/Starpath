@@ -191,7 +191,7 @@ function AddOwnCourse({ signedIn, onAdded }: { signedIn: boolean; onAdded: (id: 
           {err && <p role="alert" className="rounded-2xl bg-star/30 p-3 text-sm font-semibold">{err}</p>}
           <Button onClick={read} disabled={busy || !url.trim()} className="rounded-full">{busy ? "Reading the course…" : "Get course details"}</Button>
         </>) : (<>
-          <p className="text-sm text-muted-foreground">Here's what we found on {draft.provider}. Tweak anything, then pick where it goes. Only you will see this course.</p>
+          <p className="text-sm text-muted-foreground">Here's what we found on {draft.provider}. Tweak anything, then pick where it goes. Only you will see this course for now, but an admin may add it to the official Starpath catalog later!</p>
           <div><Label htmlFor="uc-t">Title</Label><Input id="uc-t" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></div>
           <div><Label htmlFor="uc-b">Description</Label><Input id="uc-b" value={draft.blurb} onChange={(e) => setDraft({ ...draft, blurb: e.target.value })} /></div>
           <div className="grid grid-cols-2 gap-3">
