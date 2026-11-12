@@ -77,7 +77,7 @@ function AuthPage() {
 
   const oauth = async (p: "google" | "lovable") => {
     setRemember(keep);
-    const r = await lovable.auth.signInWithOAuth(p, { redirect_uri: window.location.origin + "/auth" });
+    const r = await lovable.auth.signInWithOAuth(p, { redirect_uri: window.location.origin + "/auth", ...(p === "google" ? { extraParams: { prompt: "select_account" } } : {}) });
     if (r.error) toast.error(String(r.error.message ?? r.error));
   };
 
