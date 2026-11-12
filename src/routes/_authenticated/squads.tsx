@@ -106,7 +106,7 @@ function Squads() {
     if (error) { toast.error(error.message); return; }
     setCode(""); toast.success("Joined squad!"); reload();
   };
-  const setGoal = async (id: string, goal: number) => { await supabase.from("squads").update({ weekly_xp_goal: Math.max(50, goal) }).eq("id", id); reload(); };
+  const setGoal = async (id: string, goal: number) => { const { error } = await supabase.from("squads").update({ weekly_xp_goal: Math.min(100000, Math.max(100, Math.round(goal) || 100)) }).eq("id", id); if (error) toast.error(error.message.includes("lowered") ? "The goal can't be lowered below this week's squad XP" : "Couldn't update the goal"); reload(); };
 
   const Row = ({ p, right, rank }: { p: P; right: React.ReactNode; rank?: number }) => (
     <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
