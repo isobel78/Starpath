@@ -2,12 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { UserPlus, UserMinus, Check, X, Copy, Crown } from "lucide-react";
+import { UserPlus, UserMinus, Check, X, Copy, Crown, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/data";
@@ -26,13 +25,19 @@ function weekStart() { const d = new Date(); const day = (d.getDay() + 6) % 7; d
 /** Matches the server's award tag: Monday of the current UTC week. */
 function weekTag() { const d = new Date(); const day = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - day); return d.toISOString().slice(0, 10); }
 
-async function weeklyXp(ids: string[]) {
-  if (!ids.length) return {} as Record<string, number>;
-  const { data } = await supabase.from("xp_events").select("user_id, amount").in("user_id", ids).gte("created_at", weekStart());
-  const out: Record<string, number> = {};
-  (data ?? []).forEach((r) => (out[r.user_id] = (out[r.user_id] ?? 0) + r.amount));
-  return out;
+type XpEv = { user_id: string; amount: number; created_at: string; reason: string };
+async function weeklyEvents(ids: string[]) {
+  if (!ids.length) return [] as XpEv[];
+  const since = [weekStart(), weekTag() + "T00:00:00Z"].sort()[0];
+  const { data } = await supabase.from("xp_events").select("user_id, amount, created_at, reason").in("user_id", ids).gte("created_at", since);
+  return (data ?? []) as XpEv[];
 }
+/** XP a member earned toward a squad: this UTC week, only after they joined, excluding squad awards (matches the server). */
+export function squadXp(events: XpEv[], userId: string, joinedAt: string, weekStartIso: string) {
+  const from = Math.max(Date.parse(weekStartIso), Date.parse(joinedAt));
+  return events.filter((e) => e.user_id === userId && !e.reason.startsWith("squad:") && Date.parse(e.created_at) >= from).reduce((t, e) => t + e.amount, 0);
+}
+const BAR_COLORS = ["bg-primary", "bg-secondary", "bg-accent", "bg-star", "bg-destructive", "bg-foreground"];
 
 function Squads() {
   const { user } = useUser();
@@ -47,9 +52,11 @@ function Squads() {
       (fr ?? []).forEach((f) => { ids.add(f.requester); ids.add(f.addressee); });
       (sm ?? []).forEach((m) => ids.add(m.user_id));
       const { data: ps } = await supabase.from("public_profiles").select("id, username, display_name, avatar_emoji, avatar_url, current_streak").in("id", [...ids]);
-      const xp = await weeklyXp([...ids]);
+      const events = await weeklyEvents([...ids]);
+      const ws = weekStart(); const xp: Record<string, number> = {};
+      events.filter((e) => e.created_at >= ws).forEach((r) => (xp[r.user_id] = (xp[r.user_id] ?? 0) + r.amount));
       const { data: awards } = await supabase.from("xp_events").select("reason").eq("user_id", uid!).like("reason", "squad:%");
-      return { friendships: fr ?? [], squads: sq ?? [], members: sm ?? [], awards: (awards ?? []).map((a) => a.reason), profiles: Object.fromEntries((ps ?? []).map((p) => [p.id, p])) as Record<string, P>, xp };
+      return { friendships: fr ?? [], squads: sq ?? [], members: sm ?? [], awards: (awards ?? []).map((a) => a.reason), events, profiles: Object.fromEntries((ps ?? []).map((p) => [p.id, p])) as Record<string, P>, xp };
     },
   });
   const [search, setSearch] = useState("");
@@ -57,6 +64,16 @@ function Squads() {
   const [code, setCode] = useState("");
   const [removing, setRemoving] = useState<{ id: string; name: string } | null>(null);
   const [removalBusy, setRemovalBusy] = useState(false);
+  const [deletingSquad, setDeletingSquad] = useState<{ id: string; name: string } | null>(null);
+  const [squadBusy, setSquadBusy] = useState(false);
+  const confirmDeleteSquad = async () => {
+    if (!deletingSquad || squadBusy) return;
+    setSquadBusy(true);
+    const { error } = await supabase.from("squads").delete().eq("id", deletingSquad.id);
+    setSquadBusy(false);
+    if (error) { toast.error("Couldn't delete this squad. Please try again."); return; }
+    setDeletingSquad(null); toast.success("Squad deleted"); social.refetch();
+  };
   const confirmRemoval = async () => {
     if (!removing || removalBusy) return;
     setRemovalBusy(true);
@@ -71,7 +88,7 @@ function Squads() {
   };
   const reload = () => social.refetch();
   if (!social.data || !uid) return <AppShell><p className="animate-pulse text-center">Loading…</p></AppShell>;
-  const { friendships, squads, members, profiles, xp, awards } = social.data;
+  const { friendships, squads, members, profiles, xp, awards, events } = social.data;
   const friends = friendships.filter((f) => f.status === "accepted").map((f) => (f.requester === uid ? f.addressee : f.requester));
   const incoming = friendships.filter((f) => f.status === "pending" && f.addressee === uid);
   const outgoing = friendships.filter((f) => f.status === "pending" && f.requester === uid);
@@ -153,24 +170,40 @@ function Squads() {
           </div>
           {squads.length === 0 && <p className="text-muted-foreground">Create a squad and share the invite code with friends.</p>}
           {squads.map((s) => {
-            const ms = members.filter((m) => m.squad_id === s.id).map((m) => m.user_id).filter((id) => profiles[id]).sort((a, b) => (xp[b] ?? 0) - (xp[a] ?? 0));
-            const total = ms.reduce((t, id) => t + (xp[id] ?? 0), 0);
+            const wk = weekTag() + "T00:00:00Z";
+            const sx: Record<string, number> = {};
+            members.filter((m) => m.squad_id === s.id).forEach((m) => (sx[m.user_id] = squadXp(events, m.user_id, m.joined_at, wk)));
+            const ms = Object.keys(sx).filter((id) => profiles[id]).sort((a, b) => sx[b] - sx[a]);
+            const total = ms.reduce((t, id) => t + sx[id], 0);
+            const scale = Math.max(total, s.weekly_xp_goal);
             return (
               <div key={s.id} className="rounded-3xl bg-muted p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-2xl font-bold">{s.emoji} {s.name}</h3>
-                  <button onClick={() => { navigator.clipboard.writeText(s.invite_code); toast.success("Invite code copied"); }} className="flex items-center gap-1 rounded-full bg-card px-3 py-1 text-sm font-bold"><Copy className="h-3.5 w-3.5" /> {s.invite_code}</button>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => { navigator.clipboard.writeText(s.invite_code); toast.success("Invite code copied"); }} className="flex items-center gap-1 rounded-full bg-card px-3 py-1 text-sm font-bold"><Copy className="h-3.5 w-3.5" /> {s.invite_code}</button>
+                    {s.owner_id === uid && <Button size="icon" variant="ghost" aria-label="Delete squad" title="Delete squad" onClick={() => setDeletingSquad({ id: s.id, name: s.name })}><Trash2 className="h-4 w-4" /></Button>}
+                  </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-sm font-semibold"><span>Weekly goal: {total} / {s.weekly_xp_goal} XP</span>{s.owner_id === uid && <Input type="number" defaultValue={s.weekly_xp_goal} onBlur={(e) => setGoal(s.id, Number(e.target.value))} className="h-8 w-24 bg-card" aria-label="Weekly goal" />}</div>
-                <Progress value={Math.min(100, (total / s.weekly_xp_goal) * 100)} className="mt-2 h-3" />
+                <div className="mt-2 flex h-4 w-full overflow-hidden rounded-full bg-card" role="img" aria-label={`Squad XP ${total} of ${s.weekly_xp_goal}`}>
+                  {ms.filter((id) => sx[id] > 0).map((id) => <div key={id} className={`${BAR_COLORS[ms.indexOf(id) % BAR_COLORS.length]} h-full transition-all`} style={{ width: `${(sx[id] / scale) * 100}%` }} title={`${profiles[id]!.display_name}: ${sx[id]} XP`} />)}
+                </div>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold">{ms.map((id, i) => <span key={id} className="flex items-center gap-1.5"><span className={`h-3 w-3 rounded-full ${BAR_COLORS[i % BAR_COLORS.length]}`} />{profiles[id]!.display_name} · {sx[id]} XP</span>)}</div>
                 {total >= s.weekly_xp_goal && <SquadAward squadId={s.id} claimed={awards.includes(`squad:${s.id}:${weekTag()}`)} onClaimed={reload} />}
                 {awards.filter((a) => a.startsWith(`squad:${s.id}:`)).length > 0 && <p className="mt-1 text-sm font-semibold">🏆 Squad trophies earned: {awards.filter((a) => a.startsWith(`squad:${s.id}:`)).length}</p>}
-                <div className="mt-4 space-y-2">{ms.map((id, i) => <Row key={id} p={profiles[id]!} rank={i} right={<><span className="font-bold text-primary">{xp[id] ?? 0} XP</span><CheerBtns to={id} /></>} />)}</div>
+                <div className="mt-4 space-y-2">{ms.map((id, i) => <Row key={id} p={profiles[id]!} rank={i} right={<><span className="font-bold text-primary">{sx[id]} XP</span><CheerBtns to={id} /></>} />)}</div>
               </div>
             );
           })}
         </TabsContent>
       </Tabs>
+      <AlertDialog open={!!deletingSquad} onOpenChange={(open) => { if (!open && !squadBusy) setDeletingSquad(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader><AlertDialogTitle>Delete {deletingSquad?.name}?</AlertDialogTitle><AlertDialogDescription>This removes the squad for every member. Everyone keeps their own XP and trophies.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter><AlertDialogCancel disabled={squadBusy}>Cancel</AlertDialogCancel><Button variant="destructive" disabled={squadBusy} onClick={confirmDeleteSquad}>{squadBusy ? "Deleting…" : "Delete squad"}</Button></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <AlertDialog open={!!removing} onOpenChange={(open) => { if (!open && !removalBusy) setRemoving(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader><AlertDialogTitle>Remove {removing?.name} as a friend?</AlertDialogTitle><AlertDialogDescription>This removes the friendship for both of you. Any squads you share will stay unchanged.</AlertDialogDescription></AlertDialogHeader>
