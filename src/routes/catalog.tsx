@@ -79,8 +79,11 @@ function Catalog() {
       <Input placeholder="Search courses…" value={q} onChange={(e) => setQ(e.target.value)} className="mt-6 h-12 rounded-full" />
       <div className="mt-4 flex flex-wrap gap-2"><Chip on={!prov} onClick={() => setProv(null)}>All sources</Chip>{PROVIDERS.map((p) => <Chip key={p} on={prov === p} onClick={() => setProv(p)}>{p}</Chip>)}</div>
       <div className="mt-2 flex flex-wrap gap-2"><Chip on={!area} onClick={() => setArea(null)}>All areas</Chip>{AREAS.map((a) => <Chip key={a} on={area === a} onClick={() => setArea(a)}>{a}</Chip>)}</div>
-      <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {list.map((c) => (
+      {[...AREAS].sort((a, b) => { const i = (x: string) => { const k = KNOWN_AREAS.indexOf(x); return k < 0 ? 99 : k; }; return i(a) - i(b) || a.localeCompare(b); }).map((a) => { const items = list.filter((c) => c.area === a); return items.length === 0 ? null : (
+      <section key={a} className="mt-8">
+        <h2 className="text-2xl font-bold">{a} <span className="text-base font-semibold text-muted-foreground">· {items.length}</span></h2>
+      <div className="mt-3 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {items.map((c) => (
           <div key={c.id} className={`flex flex-col rounded-3xl border p-5 transition hover:shadow-glow ${c.userAdded ? "border-star bg-star/15" : "border-border bg-card"}`}>
             <div className="flex items-center gap-2">
               <span className={`h-3 w-3 rounded-full ${PROVIDER_COLORS[c.provider] ?? "bg-accent"}`} />
@@ -119,6 +122,7 @@ function Catalog() {
           </div>
         ))}
       </div>
+      </section>); })}
     </AppShell>
   );
 }
