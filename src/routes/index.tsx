@@ -15,6 +15,7 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Explore frontend, backend, full stack, game development, UI/UX & product design, databases and computer science with smart scheduling, streaks and study squads." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: "https://starpath.atlantadaniel.com/" }, { property: "og:image", content: "https://starpath.atlantadaniel.com/og-home.jpg" }, { name: "twitter:image", content: "https://starpath.atlantadaniel.com/og-home.jpg" }, { property: "og:image:width", content: "1200" }, { property: "og:image:height", content: "630" }, { property: "og:video", content: "https://starpath.atlantadaniel.com/og-home.mp4" }, { property: "og:video:secure_url", content: "https://starpath.atlantadaniel.com/og-home.mp4" }, { property: "og:video:type", content: "video/mp4" }, { property: "og:video:width", content: "1200" }, { property: "og:video:height", content: "630" },
     ],
   }),
   component: Index,
