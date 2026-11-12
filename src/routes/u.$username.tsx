@@ -37,7 +37,7 @@ export const Route = createFileRoute("/u/$username")({
   head: ({ loaderData }) => {
     const n = loaderData ? `${loaderData.profile.display_name} (@${loaderData.profile.username})` : "Learner";
     const d = loaderData ? `Level ${levelFor(loaderData.profile.xp).level} · ${loaderData.profile.current_streak}-day streak on Starpath` : "Learner profile on Starpath";
-    return { meta: [{ title: `${n} — Starpath` }, { name: "description", content: d }, { property: "og:title", content: `${n} — Starpath` }, { property: "og:description", content: d }, { property: "og:type", content: "profile" }] };
+    return { meta: [{ title: `${n} — Starpath` }, { name: "description", content: d }, { property: "og:title", content: `${n} — Starpath` }, { property: "og:description", content: d }, { property: "og:type", content: "profile" }, { name: "twitter:card", content: "summary" }] };
   },
   notFoundComponent: () => <AppShell><p className="text-center text-xl">No learner with that username 🌙 <Link to="/" className="text-primary">Go home</Link></p></AppShell>,
   component: ProfilePage,

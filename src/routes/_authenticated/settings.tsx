@@ -12,7 +12,7 @@ import { useMyData, useRefreshMe } from "@/lib/data";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/settings")({
-  head: () => ({ meta: [{ title: "Profile & settings — Starpath" }, { name: "description", content: "Edit your Starpath profile, avatar and password." }, { property: "og:title", content: "Profile & settings — Starpath" }, { property: "og:description", content: "Edit your Starpath profile, avatar and password." }] }),
+  head: () => ({ meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "Profile & settings — Starpath" }, { name: "description", content: "Edit your Starpath profile, avatar and password." }, { property: "og:title", content: "Profile & settings — Starpath" }, { property: "og:description", content: "Edit your Starpath profile, avatar and password." }] }),
   component: SettingsPage,
 });
 

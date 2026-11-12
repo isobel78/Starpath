@@ -24,6 +24,8 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/catalog")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Course catalog — Starpath" },
       { name: "description", content: "Curated courses from boot.dev, freeCodeCamp, Exercism, The Odin Project, CS50 and Roadmap.sh." },
       { property: "og:title", content: "Course catalog — Starpath" },
