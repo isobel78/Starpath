@@ -180,7 +180,7 @@ function Roadmap() {
                   </div>
                 </div>
                 <Progress value={pct} className="mt-3 h-2" />
-                {(pct === 100 || e.completed_at) && <CertDialog courseId={c.id} current={e.certificate_url} done={!!e.completed_at} defaultOpen={selectedCourse === c.id && !e.completed_at} onSaved={refresh} />}
+                {<CertDialog courseId={c.id} current={e.certificate_url} done={!!e.completed_at} defaultOpen={selectedCourse === c.id && !e.completed_at} onSaved={refresh} />}
               </div>
             );
           })}
@@ -201,7 +201,7 @@ function Roadmap() {
                 <Button size="icon" variant="ghost" aria-label="Move down" onClick={() => moveIn(extra, i, 1)}><ArrowDown className="h-4 w-4" /></Button>
                 <Button size="icon" variant="ghost" aria-label="Move to Starpath" title="Move to Starpath" onClick={() => setExtra(c.id, false)}><MapIcon className="h-4 w-4" /></Button>
                 <Button size="icon" variant="ghost" aria-label="Remove" onClick={() => remove(c.id)}><Trash2 className="h-4 w-4" /></Button>
-                {(doneN === c.units.length || e.completed_at) && <div className="w-full"><CertDialog courseId={c.id} current={e.certificate_url} done={!!e.completed_at} defaultOpen={selectedCourse === c.id && !e.completed_at} onSaved={refresh} /></div>}
+                {<div className="w-full"><CertDialog courseId={c.id} current={e.certificate_url} done={!!e.completed_at} defaultOpen={selectedCourse === c.id && !e.completed_at} onSaved={refresh} /></div>}
               </div>); })}
           </div>
         </div>
@@ -236,7 +236,8 @@ function CertDialog({ courseId, current, done, onSaved, defaultOpen = false }: {
   const [open, setOpen] = useState(defaultOpen);
   const save = async () => {
     if (url && !/^https:\/\/\S+$/.test(url)) { toast.error("Use a full https:// link"); return; }
-    const { error } = await supabase.rpc("complete_course", { _course: courseId, _cert: url });
+    let { error } = await supabase.rpc("complete_course", { _course: courseId, _cert: url });
+    if (error?.message.includes("complete some lessons")) ({ error } = await supabase.rpc("mark_prior_completion", { _course: courseId, _cert: url }));
     if (error) { toast.error(error.message); return; }
     toast.success(done ? "Certificate saved" : "Course complete! +100 XP 🎓"); setOpen(false); onSaved();
   };
