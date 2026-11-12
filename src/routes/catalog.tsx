@@ -52,7 +52,7 @@ function Catalog() {
   const PROVIDERS: Provider[] = [...new Set(COURSES.map((c) => c.provider))];
   const AREAS: Area[] = [...new Set(COURSES.map((c) => c.area))];
 
-  const list = useMemo(() => COURSES.filter((c) => (!prov || c.provider === prov) && (!area || c.area === area) && (c.title + c.blurb + (c.tags ?? []).join(" ")).toLowerCase().includes(q.toLowerCase())), [q, prov, area, version]);
+  const list = useMemo(() => COURSES.filter((c) => (!prov || c.provider === prov) && (!area || c.area === area) && (c.title + c.blurb + (c.tags ?? []).join(" ")).toLowerCase().includes(q.toLowerCase())).sort((a, b) => a.title.localeCompare(b.title)), [q, prov, area, version]);
 
   const qc = useQueryClient();
   const add = async (id: string, extra = false) => {
