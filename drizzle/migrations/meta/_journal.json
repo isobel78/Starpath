@@ -71,6 +71,20 @@
       "when": 1794506402377,
       "tag": "0009_rename_daily_limit_message",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794506661125,
+      "tag": "0010_allow_lessons_past_xp_limit",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794506685736,
+      "tag": "0011_track_lesson_xp_awarded",
+      "breakpoints": true
     }
   ]
 }

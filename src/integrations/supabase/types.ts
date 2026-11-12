@@ -158,6 +158,7 @@ export type Database = {
           minutes: number
           unit_index: number
           user_id: string
+          xp_awarded: number | null
         }
         Insert: {
           completed_on?: string
@@ -167,6 +168,7 @@ export type Database = {
           minutes?: number
           unit_index: number
           user_id: string
+          xp_awarded?: number | null
         }
         Update: {
           completed_on?: string
@@ -176,6 +178,7 @@ export type Database = {
           minutes?: number
           unit_index?: number
           user_id?: string
+          xp_awarded?: number | null
         }
         Relationships: []
       }
