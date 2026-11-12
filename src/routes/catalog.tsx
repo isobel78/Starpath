@@ -29,6 +29,7 @@ export const Route = createFileRoute("/catalog")({
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:image", content: "https://starpath.atlantadaniel.com/og-catalog.jpg" },
       { name: "twitter:image", content: "https://starpath.atlantadaniel.com/og-catalog.jpg" },
+      { property: "og:url", content: "https://starpath.atlantadaniel.com/catalog" }, { property: "og:site_name", content: "Starpath" }, { property: "og:video", content: "https://starpath.atlantadaniel.com/og-catalog.mp4" }, { property: "og:video:secure_url", content: "https://starpath.atlantadaniel.com/og-catalog.mp4" }, { property: "og:video:type", content: "video/mp4" }, { property: "og:video:width", content: "1200" }, { property: "og:video:height", content: "630" }, { property: "og:image:width", content: "1200" }, { property: "og:image:height", content: "630" },
       { title: "Course catalog — Starpath" },
       { name: "description", content: "Curated courses from boot.dev, freeCodeCamp, Exercism, The Odin Project, CS50 and Roadmap.sh." },
       { property: "og:title", content: "Course catalog — Starpath" },
