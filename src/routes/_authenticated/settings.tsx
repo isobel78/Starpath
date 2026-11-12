@@ -27,6 +27,7 @@ function SettingsPage() {
   const refresh = useRefreshMe();
   const fileRef = useRef<HTMLInputElement>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [origSrc, setOrigSrc] = useState<string | null>(null);
   const [f, setF] = useState({ username: "", display_name: "", bio: "", avatar_emoji: "🚀", avatar_url: null as string | null });
   const [pw, setPw] = useState({ a: "", b: "" });
   const [email, setEmail] = useState("");
@@ -52,7 +53,7 @@ function SettingsPage() {
     if (!file) return;
     if (!file.type.startsWith("image/")) { toast.error("Please pick an image file"); return; }
     const reader = new FileReader();
-    reader.onload = () => setCropSrc(reader.result as string);
+    reader.onload = () => { setOrigSrc(reader.result as string); setCropSrc(reader.result as string); };
     reader.onerror = () => toast.error("Couldn't read that image");
     reader.readAsDataURL(file);
   };
@@ -92,10 +93,15 @@ function SettingsPage() {
       <section className="mt-6 rounded-3xl border border-border bg-card p-6">
         <h2 className="text-xl font-bold">Avatar</h2>
         <div className="mt-4 flex flex-wrap items-center gap-4">
-          <UserAvatar url={f.avatar_url} emoji={f.avatar_emoji} className="h-24 w-24 text-6xl shadow-glow" />
+          {f.avatar_url ? (
+            <button type="button" aria-label="Edit photo crop" title="Click to adjust crop" onClick={() => setCropSrc(origSrc ?? f.avatar_url)} className="group relative rounded-full">
+              <UserAvatar url={f.avatar_url} emoji={f.avatar_emoji} className="h-24 w-24 text-6xl shadow-glow" />
+              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-foreground/50 text-xs font-bold text-background opacity-0 transition group-hover:opacity-100">Edit crop</span>
+            </button>
+          ) : <UserAvatar url={f.avatar_url} emoji={f.avatar_emoji} className="h-24 w-24 text-6xl shadow-glow" />}
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" className="rounded-full" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4" /> Upload photo</Button>
-            {f.avatar_url && <Button variant="ghost" className="rounded-full" onClick={() => setF({ ...f, avatar_url: null })}>Use a character instead</Button>}
+            {f.avatar_url && <Button variant="ghost" className="rounded-full" onClick={() => { setOrigSrc(null); setF({ ...f, avatar_url: null }); }}>Use a character instead</Button>}
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { upload(e.target.files?.[0]); e.target.value = ""; }} />
             <AvatarCropDialog src={cropSrc} onCancel={() => setCropSrc(null)} onDone={(url) => { setCropSrc(null); setF((p) => ({ ...p, avatar_url: url })); toast("Looking good! Press Save to keep it."); }} />
           </div>
