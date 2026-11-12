@@ -168,8 +168,8 @@ function Squads() {
             const wk = weekTag() + "T00:00:00Z";
             const sx: Record<string, number> = {};
             members.filter((m) => m.squad_id === s.id).forEach((m) => (sx[m.user_id] = squadXp(events, m.user_id, m.joined_at, wk)));
-            const ms = Object.keys(sx).filter((id) => profiles[id]).sort((a, b) => sx[b] - sx[a]);
-            const total = ms.reduce((t, id) => t + sx[id], 0);
+            const ms = Object.keys(sx).filter((id) => profiles[id]).sort((a, b) => (sx[b] ?? 0) - (sx[a] ?? 0));
+            const total = ms.reduce((t, id) => t + (sx[id] ?? 0), 0);
             const scale = Math.max(total, s.weekly_xp_goal);
             return (
               <div key={s.id} className="rounded-3xl bg-muted p-5">
@@ -182,12 +182,12 @@ function Squads() {
                 </div>
                 <div className="mt-3 flex items-center justify-between text-sm font-semibold"><span>Weekly goal: {total} / {s.weekly_xp_goal} XP</span>{s.owner_id === uid && <Input type="number" defaultValue={s.weekly_xp_goal} onBlur={(e) => setGoal(s.id, Number(e.target.value))} className="h-8 w-24 bg-card" aria-label="Weekly goal" />}</div>
                 <div className="mt-2 flex h-4 w-full overflow-hidden rounded-full bg-card" role="img" aria-label={`Squad XP ${total} of ${s.weekly_xp_goal}`}>
-                  {ms.filter((id) => sx[id] > 0).map((id) => <div key={id} className={`${BAR_COLORS[ms.indexOf(id) % BAR_COLORS.length]} h-full transition-all`} style={{ width: `${(sx[id] / scale) * 100}%` }} title={`${profiles[id]!.display_name}: ${sx[id]} XP`} />)}
+                  {ms.filter((id) => (sx[id] ?? 0) > 0).map((id) => <div key={id} className={`${BAR_COLORS[ms.indexOf(id) % BAR_COLORS.length]} h-full transition-all`} style={{ width: `${((sx[id] ?? 0) / scale) * 100}%` }} title={`${profiles[id]!.display_name}: ${(sx[id] ?? 0)} XP`} />)}
                 </div>
-                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold">{ms.map((id, i) => <span key={id} className="flex items-center gap-1.5"><span className={`h-3 w-3 rounded-full ${BAR_COLORS[i % BAR_COLORS.length]}`} />{profiles[id]!.display_name} · {sx[id]} XP</span>)}</div>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold">{ms.map((id, i) => <span key={id} className="flex items-center gap-1.5"><span className={`h-3 w-3 rounded-full ${BAR_COLORS[i % BAR_COLORS.length]}`} />{profiles[id]!.display_name} · {(sx[id] ?? 0)} XP</span>)}</div>
                 {total >= s.weekly_xp_goal && <SquadAward squadId={s.id} claimed={awards.includes(`squad:${s.id}:${weekTag()}`)} onClaimed={reload} />}
                 {awards.filter((a) => a.startsWith(`squad:${s.id}:`)).length > 0 && <p className="mt-1 text-sm font-semibold">🏆 Squad trophies earned: {awards.filter((a) => a.startsWith(`squad:${s.id}:`)).length}</p>}
-                <div className="mt-4 space-y-2">{ms.map((id, i) => <Row key={id} p={profiles[id]!} rank={i} right={<><span className="font-bold text-primary">{sx[id]} XP</span><CheerBtns to={id} /></>} />)}</div>
+                <div className="mt-4 space-y-2">{ms.map((id, i) => <Row key={id} p={profiles[id]!} rank={i} right={<><span className="font-bold text-primary">{(sx[id] ?? 0)} XP</span><CheerBtns to={id} /></>} />)}</div>
               </div>
             );
           })}
