@@ -16,3 +16,4 @@
 - [x] Squad weekly goal award
 - [x] User-added courses (approved sites only, highlighted, admin sees all)
 - [x] Extra Credit section (XP, not scheduled), add to Starpath or Extra Credit, auto/manual sort
+- [x] Users can delete their account from Settings

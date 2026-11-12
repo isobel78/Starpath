@@ -1,7 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { deleteMyAccount } from "@/lib/account.functions";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Upload, ExternalLink } from "lucide-react";
+import { Upload, ExternalLink, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
@@ -41,6 +44,10 @@ function SettingsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [f, setF] = useState({ username: "", display_name: "", bio: "", avatar_emoji: "🚀", avatar_url: null as string | null });
   const [pw, setPw] = useState({ a: "", b: "" });
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const del = useServerFn(deleteMyAccount);
+  const navigate = useNavigate();
   useEffect(() => {
     if (data) setF({ username: data.profile.username, display_name: data.profile.display_name, bio: data.profile.bio, avatar_emoji: data.profile.avatar_emoji, avatar_url: data.profile.avatar_url });
   }, [data?.profile]);
@@ -67,6 +74,16 @@ function SettingsPage() {
     const { error } = await supabase.auth.updateUser({ password: pw.a });
     if (error) { toast.error(error.message); return; }
     setPw({ a: "", b: "" }); toast.success("Password updated 🔒");
+  };
+
+  const removeAccount = async () => {
+    setDeleting(true);
+    try {
+      await del();
+      await supabase.auth.signOut();
+      toast.success("Your account has been deleted. Safe travels! 🌠");
+      navigate({ to: "/" });
+    } catch (e) { toast.error((e as Error).message || "Couldn't delete your account"); setDeleting(false); }
   };
 
   return (
@@ -112,6 +129,25 @@ function SettingsPage() {
           <Button onClick={changePw} className="rounded-full">Update password</Button>
         </section>
       )}
+
+      <section className="mt-6 space-y-3 rounded-3xl border border-destructive/40 bg-card p-6">
+        <h2 className="text-xl font-bold text-destructive">Delete account</h2>
+        <p className="text-sm text-muted-foreground">Permanently removes your profile, progress, XP, certificates, friends and any squads you own. This can't be undone.</p>
+        <AlertDialog onOpenChange={(o) => !o && setConfirmText("")}>
+          <AlertDialogTrigger asChild><Button variant="destructive" className="rounded-full"><Trash2 className="h-4 w-4" /> Delete my account</Button></AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete your account forever?</AlertDialogTitle>
+              <AlertDialogDescription>All your Starpath data will be erased. Type <b>DELETE</b> to confirm.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <Input aria-label="Type DELETE to confirm" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} />
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Keep my account</AlertDialogCancel>
+              <AlertDialogAction disabled={confirmText !== "DELETE" || deleting} onClick={(e) => { e.preventDefault(); void removeAccount(); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{deleting ? "Deleting…" : "Delete forever"}</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </section>
     </AppShell>
   );
 }
