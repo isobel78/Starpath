@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/data";
 import { removeFriend } from "@/lib/friends";
+import { squadXp, type XpEv } from "@/lib/squad-xp";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/squads")({
@@ -25,17 +26,11 @@ function weekStart() { const d = new Date(); const day = (d.getDay() + 6) % 7; d
 /** Matches the server's award tag: Monday of the current UTC week. */
 function weekTag() { const d = new Date(); const day = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - day); return d.toISOString().slice(0, 10); }
 
-type XpEv = { user_id: string; amount: number; created_at: string; reason: string };
 async function weeklyEvents(ids: string[]) {
   if (!ids.length) return [] as XpEv[];
   const since = [weekStart(), weekTag() + "T00:00:00Z"].sort()[0];
   const { data } = await supabase.from("xp_events").select("user_id, amount, created_at, reason").in("user_id", ids).gte("created_at", since);
   return (data ?? []) as XpEv[];
-}
-/** XP a member earned toward a squad: this UTC week, only after they joined, excluding squad awards (matches the server). */
-export function squadXp(events: XpEv[], userId: string, joinedAt: string, weekStartIso: string) {
-  const from = Math.max(Date.parse(weekStartIso), Date.parse(joinedAt));
-  return events.filter((e) => e.user_id === userId && !e.reason.startsWith("squad:") && Date.parse(e.created_at) >= from).reduce((t, e) => t + e.amount, 0);
 }
 const BAR_COLORS = ["bg-primary", "bg-secondary", "bg-accent", "bg-star", "bg-destructive", "bg-foreground"];
 
