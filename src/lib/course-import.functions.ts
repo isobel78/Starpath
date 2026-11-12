@@ -10,7 +10,7 @@ const strip = (h: string) => h.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?
 /** Reads an approved course page and drafts a catalog entry in the same shape as built-in courses. */
 export const draftCourseFromUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { url: string }) => ({ url: String(d.url ?? "").trim().slice(0, 500) }))
+  .validator((d: { url: string }) => ({ url: String(d.url ?? "").trim().slice(0, 500) }))
   .handler(async ({ data }): Promise<{ draft: CourseDraft | null; error?: string }> => {
     const provider = providerForUrl(data.url);
     if (!provider) return { draft: null, error: "not-approved" };
