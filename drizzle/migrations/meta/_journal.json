@@ -64,6 +64,13 @@
       "when": 1794501743764,
       "tag": "0008_squad_xp_since_join",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794506402377,
+      "tag": "0009_rename_daily_limit_message",
+      "breakpoints": true
     }
   ]
 }
