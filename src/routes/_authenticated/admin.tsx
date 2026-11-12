@@ -1,3 +1,4 @@
+import { standardCourseId } from "@/lib/course-id";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -91,7 +92,7 @@ function AdminPage() {
               <Button asChild size="sm" variant="ghost"><a href={r.course.url} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4" /></a></Button>
               {COURSES.some((c) => !c.userAdded && (c.id === r.id || c.url.replace(/\/+$/, "").toLowerCase() === r.course.url?.replace(/\/+$/, "").toLowerCase()))
                 ? <span className="rounded-full bg-muted px-3 py-1 text-xs font-bold">In catalog ✓</span>
-                : <Button size="sm" variant="ghost" onClick={() => setEditCourse({ ...r.course, userAdded: false, id: r.id, prereqs: [], tags: r.course.tags ?? [] })}><ArrowUpCircle className="h-4 w-4" /> Promote</Button>}
+                : <Button size="sm" variant="ghost" onClick={() => setEditCourse({ ...r.course, userAdded: false, id: "", prereqs: [], tags: r.course.tags ?? [] })}><ArrowUpCircle className="h-4 w-4" /> Promote</Button>}
               <Button size="sm" variant="ghost" onClick={async () => { const { error } = await supabase.from("user_courses").delete().eq("id", r.id); if (error) toast.error(error.message); else { toast.success("Deleted"); learnerQ.refetch(); } }}><Trash2 className="h-4 w-4" /> Delete</Button>
             </div>
           ))}
@@ -151,8 +152,12 @@ function AdminPage() {
 function CourseForm({ course, onClose, onSave }: { course: Course; onClose: () => void; onSave: (c: Course) => void }) {
   const isNew = !course.id;
   const [f, setF] = useState({ ...course, prereqsS: course.prereqs.join(", "), tagsS: (course.tags ?? []).join(", "), unitsS: course.units.join("\n"), hoursS: String(course.hours) });
+  const autoId = standardCourseId(f.title, f.provider, (x) => !!COURSE_MAP[x]);
+  const prereqList = list(f.prereqsS);
+  const prereqOptions = [...COURSES].filter((c) => !c.userAdded && c.id !== course.id && !prereqList.includes(c.id)).sort((a, b) => a.title.localeCompare(b.title));
+  const setPrereqs = (ids: string[]) => setF({ ...f, prereqsS: ids.join(", ") });
   const submit = () => {
-    const id = isNew ? slug(f.id || f.title) : course.id;
+    const id = isNew ? (f.id.trim() ? slug(f.id) : autoId) : course.id;
     if (!id || !f.title.trim()) { toast.error("Title is required"); return; }
     if (isNew && COURSE_MAP[id]) { toast.error("A course with that id already exists"); return; }
     if (!/^https:\/\/\S+\.\S+/.test(f.url)) { toast.error("Use a full https:// link"); return; }
@@ -169,7 +174,7 @@ function CourseForm({ course, onClose, onSave }: { course: Course; onClose: () =
         <DialogHeader><DialogTitle>{isNew ? "New course" : `Edit ${course.title}`}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div><Label>Title</Label><Input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></div>
-          {isNew && <div><Label>ID (optional, made from title)</Label><Input value={f.id} onChange={(e) => setF({ ...f, id: e.target.value })} placeholder={slug(f.title)} /></div>}
+          {isNew && <div><Label>ID (auto, follows platform-name standard)</Label><Input value={f.id} onChange={(e) => setF({ ...f, id: e.target.value })} placeholder={autoId} /></div>}
           <div className="grid grid-cols-2 gap-3">
             <div><Label>Platform</Label><Input list="providers" value={f.provider} onChange={(e) => setF({ ...f, provider: e.target.value })} /></div>
             <div><Label>Area</Label><Input list="areas" value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })} /></div>
@@ -181,7 +186,12 @@ function CourseForm({ course, onClose, onSave }: { course: Course; onClose: () =
             <div className="col-span-2"><Label>URL</Label><Input value={f.url} onChange={(e) => setF({ ...f, url: e.target.value })} /></div>
           </div>
           <div><Label>Description</Label><Textarea value={f.blurb} onChange={(e) => setF({ ...f, blurb: e.target.value })} /></div>
-          <div><Label>Prerequisites (course ids, comma separated)</Label><Input value={f.prereqsS} onChange={(e) => setF({ ...f, prereqsS: e.target.value })} placeholder="e.g. fcc-rwd, odin-js" /></div>
+          <div><Label>Prerequisites</Label>
+            <div className="mb-2 flex flex-wrap gap-1.5">{prereqList.length ? prereqList.map((p) => <span key={p} className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-semibold">{COURSE_MAP[p]?.title ?? p} <span className="text-muted-foreground">({p})</span><button type="button" aria-label={`Remove ${p}`} onClick={() => setPrereqs(prereqList.filter((x) => x !== p))}>×</button></span>) : <span className="text-xs text-muted-foreground">None</span>}</div>
+            <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value="" onChange={(e) => e.target.value && setPrereqs([...prereqList, e.target.value])}>
+              <option value="">+ Add a prerequisite…</option>
+              {prereqOptions.map((c) => <option key={c.id} value={c.id}>{c.title} · {c.provider} ({c.id})</option>)}
+            </select></div>
           <div><Label>Tags (comma separated)</Label><Input value={f.tagsS} onChange={(e) => setF({ ...f, tagsS: e.target.value })} placeholder="e.g. beginner, projects" /></div>
           <div><Label>Units (one per line)</Label><Textarea rows={6} value={f.unitsS} onChange={(e) => setF({ ...f, unitsS: e.target.value })} /></div>
           <Button onClick={submit} className="w-full rounded-full">Save course</Button>
