@@ -1,4 +1,6 @@
 # Roadmap
+- [ ] Add Game Development track with verified source courses
+- [ ] Forgot-password request and public password-reset page
 - [x] Unified completed-course pills at the bottom, sorted by date/name/source
 - [x] Remove accepted friends with confirmation
 - [x] Last lesson opens its course completion/certificate in Starpath
