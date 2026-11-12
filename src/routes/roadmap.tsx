@@ -17,6 +17,7 @@ import { groupCourses, type CompletedSort } from "@/lib/completed-courses";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/roadmap")({
+  staticData: { sitemap: true },
   validateSearch: (search: Record<string, unknown>): { course?: string } => (typeof search['course'] === "string" ? { course: search['course'] } : {}),
   head: () => ({ meta: [{ title: "My Starpath" }, { name: "description", content: "Pick a career track or build your own course playlist." }, { property: "og:title", content: "My Starpath" }, { property: "og:description", content: "Pick a career track or build your own course playlist." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Roadmap,

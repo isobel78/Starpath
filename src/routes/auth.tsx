@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { setRemember } from "@/lib/remember";
 
 export const Route = createFileRoute("/auth")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Sign in — Starpath" },

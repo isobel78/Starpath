@@ -6,6 +6,7 @@ import { TRACKS } from "@/lib/catalog";
 import { useCatalog } from "@/lib/catalog-store";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Starpath — Build Your Learning Roadmap" },

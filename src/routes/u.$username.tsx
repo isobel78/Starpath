@@ -29,6 +29,7 @@ const getProfile = createServerFn({ method: "GET" })
   });
 
 export const Route = createFileRoute("/u/$username")({
+  staticData: { sitemap: false },
   loader: async ({ params }) => {
     const r = await getProfile({ data: params.username });
     if (!r) throw notFound();

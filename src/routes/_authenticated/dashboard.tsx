@@ -18,6 +18,7 @@ import { finishesCourse } from "@/lib/lesson-progress";
 import { studyToday, DAY_START_HOUR } from "@/lib/day";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "Today — Starpath" }, { name: "description", content: "Your daily study goals, streak and XP." }, { property: "og:title", content: "Today — Starpath" }, { property: "og:description", content: "Your daily study goals, streak and XP." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Dashboard,
 });

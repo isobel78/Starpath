@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { isRecoveryLink } from "@/lib/password-recovery";
 
 export const Route = createFileRoute("/reset-password")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [
     { title: "Reset your password — Starpath" },
     { name: "description", content: "Set a new password for your Starpath account." },
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/reset-password")({
     { property: "og:description", content: "Set a new password for your Starpath account." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
+    { name: "robots", content: "noindex" },
   ] }),
   component: ResetPassword,
 });

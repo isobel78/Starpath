@@ -15,6 +15,7 @@ import { BASE_COURSES, BASE_TRACKS, COURSES, TRACKS, COURSE_MAP, KNOWN_AREAS, KN
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "Curriculum admin — Starpath" }, { name: "description", content: "Manage Starpath courses and career tracks." }, { property: "og:title", content: "Curriculum admin — Starpath" }, { property: "og:description", content: "Manage Starpath courses and career tracks." }, { name: "robots", content: "noindex" }] }),
   component: AdminPage,
 });
