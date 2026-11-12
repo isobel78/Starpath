@@ -44,6 +44,7 @@ function SettingsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [f, setF] = useState({ username: "", display_name: "", bio: "", avatar_emoji: "🚀", avatar_url: null as string | null });
   const [pw, setPw] = useState({ a: "", b: "" });
+  const [email, setEmail] = useState("");
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
   const del = useServerFn(deleteMyAccount);
@@ -74,6 +75,15 @@ function SettingsPage() {
     const { error } = await supabase.auth.updateUser({ password: pw.a });
     if (error) { toast.error(error.message); return; }
     setPw({ a: "", b: "" }); toast.success("Password updated 🔒");
+  };
+
+  const changeEmail = async () => {
+    const next = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next)) { toast.error("Please enter a valid email"); return; }
+    if (next === user.email) { toast.error("That's already your email"); return; }
+    const { error } = await supabase.auth.updateUser({ email: next }, { emailRedirectTo: `${window.location.origin}/settings` });
+    if (error) { toast.error(error.message); return; }
+    setEmail(""); toast.success("Check your inbox to confirm the new email 📬");
   };
 
   const removeAccount = async () => {
@@ -120,6 +130,15 @@ function SettingsPage() {
         <div><Label htmlFor="bio">Bio</Label><Textarea id="bio" maxLength={200} value={f.bio} onChange={(e) => setF({ ...f, bio: e.target.value })} /></div>
         <Button onClick={save} className="rounded-full">Save profile</Button>
       </section>
+
+      {hasPassword && (
+        <section className="mt-6 space-y-4 rounded-3xl border border-border bg-card p-6">
+          <h2 className="text-xl font-bold">Change email</h2>
+          <p className="text-sm text-muted-foreground">Current email: <b>{user.email}</b>{user.new_email && <> · waiting for confirmation of <b>{user.new_email}</b></>}</p>
+          <div><Label htmlFor="em">New email</Label><Input id="em" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+          <Button onClick={changeEmail} className="rounded-full">Update email</Button>
+        </section>
+      )}
 
       {hasPassword && (
         <section className="mt-6 space-y-4 rounded-3xl border border-border bg-card p-6">

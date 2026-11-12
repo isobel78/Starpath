@@ -18,3 +18,7 @@
 - [x] Extra Credit section (XP, not scheduled), add to Starpath or Extra Credit, auto/manual sort
 - [x] Users can delete their account from Settings
 - [x] Catalog A–Z; home-screen app icons
+- [x] Today: finished Extra Credit lessons stay under Extra Credit; next lesson first, finished below; XP earned today
+- [x] Delete squads; colored per-member weekly goal bars; new squads only count XP earned after joining
+- [x] Promoted learner courses appear once in the catalog
+- [x] Change email in Settings
