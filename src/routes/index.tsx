@@ -40,7 +40,7 @@ function Index() {
         <h1 className="relative z-10 max-w-3xl text-5xl font-bold leading-tight md:text-7xl">Chart your path to becoming a developer.</h1>
         <p className="relative z-10 mt-6 max-w-xl text-lg opacity-90">Create a personal Starpath for frontend, backend, full stack, game development, or UI/UX &amp; product design — with daily goals, streaks and friends to keep you going.</p>
         <div className="relative z-10 mt-8 flex flex-wrap gap-3">
-          <Button asChild size="lg" className="rounded-full bg-star text-star-foreground shadow-star hover:bg-star/90"><Link to="/auth">Start my Starpath</Link></Button>
+          <Button asChild size="lg" className="rounded-full bg-star text-star-foreground shadow-star hover:bg-star/90"><Link to="/roadmap">Start my Starpath</Link></Button>
           <Button asChild size="lg" variant="outline" className="rounded-full border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-background/20 hover:text-primary-foreground"><Link to="/catalog">Browse catalog</Link></Button>
         </div>
       </section>

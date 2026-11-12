@@ -101,7 +101,7 @@ function Roadmap() {
   return (
     <AppShell>
       <h1 className="text-4xl font-bold">{user ? "My " : "Explore a "}<span className="text-gradient">Starpath</span></h1>
-      {!user && <p className="mt-2 text-muted-foreground">Peek at every career track for free. When you're ready, press Blast off and we'll set up your account.</p>}
+      {!user && <p className="mt-2 text-muted-foreground">Take a peek at available career tracks. When you're ready, press Blast off and we'll set up your account.</p>}
 
       <section className="mt-6">
         <h2 className="text-xl font-bold">Browse career tracks</h2>
