@@ -13,6 +13,8 @@ import { COURSE_MAP, TRACKS } from "@/lib/catalog";
 import { orderByPrereqs, missingPrereqs } from "@/lib/schedule";
 import { supabase } from "@/integrations/supabase/client";
 import { useCatalog } from "@/lib/catalog-store";
+import { groupCourses, type CompletedSort } from "@/lib/completed-courses";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/roadmap")({
   validateSearch: (search: Record<string, unknown>): { course?: string } => (typeof search['course'] === "string" ? { course: search['course'] } : {}),
@@ -29,6 +31,7 @@ function Roadmap() {
   const [date, setDate] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [completedSort, setCompletedSort] = useState<CompletedSort>("date");
   const navigate = useNavigate();
   useCatalog();
   useEffect(() => {
@@ -52,9 +55,7 @@ function Roadmap() {
     enrollments: previewIds.map((cid) => me.enrollments.find((e) => e.course_id === cid) ?? { course_id: cid, completed_at: null }),
     completions: me.completions,
   }, 1);
-  const active = me.enrollments.filter((e) => !e.prior && !e.extra);
-  const extra = me.enrollments.filter((e) => !e.prior && e.extra);
-  const prior = me.enrollments.filter((e) => e.prior);
+  const { active, extra, completed } = groupCourses(me.enrollments, COURSE_MAP, completedSort);
   const missing = missingPrereqs(ids);
 
   const savePositions = async (order: string[]) => {
@@ -204,13 +205,26 @@ function Roadmap() {
               </div>); })}
           </div>
         </div>
-        {prior.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-xl font-bold">Completed before Starpath 🎓</h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {prior.map((e) => <span key={e.id} className="flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-semibold border border-border">{COURSE_MAP[e.course_id]?.title ?? e.course_id}{e.certificate_url && <a href={e.certificate_url} target="_blank" rel="noreferrer" className="text-primary" aria-label="Certificate"><ExternalLink className="h-3.5 w-3.5" /></a>}</span>)}
+        {completed.length > 0 && (
+          <section className="mt-8" aria-label="Completed courses">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-xl font-bold">Completed courses 🎓 ({completed.length})</h2>
+              <Select value={completedSort} onValueChange={(value) => { if (value === "date" || value === "name" || value === "source") setCompletedSort(value); }}>
+                <SelectTrigger className="w-60" aria-label="Sort completed courses"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date">Completion date · newest first</SelectItem>
+                  <SelectItem value="name">Name · A–Z</SelectItem>
+                  <SelectItem value="source">Source · A–Z</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {completed.map((e) => <span id={`course-${e.course_id}`} key={e.id} className={`flex max-w-full items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-semibold border border-border ${selectedCourse === e.course_id ? "ring-2 ring-primary" : ""}`}>
+                <span className="min-w-0 break-words">{COURSE_MAP[e.course_id]?.title ?? e.course_id}<span className="block text-xs font-normal text-muted-foreground">{COURSE_MAP[e.course_id]?.provider ?? ""} · {e.completed_at ? new Date(e.completed_at).toLocaleDateString() : ""}</span></span>
+                {e.certificate_url && <a href={e.certificate_url} target="_blank" rel="noreferrer" className="shrink-0 text-primary" aria-label={`Certificate for ${COURSE_MAP[e.course_id]?.title ?? e.course_id}`} title="View certificate"><ExternalLink className="h-3.5 w-3.5" /></a>}
+              </span>)}
+            </div>
+          </section>
         )}
       </section></>}
     </AppShell>

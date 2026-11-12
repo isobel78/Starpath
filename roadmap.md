@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Unified completed-course pills at the bottom, sorted by date/name/source
 - [x] Remove accepted friends with confirmation
 - [x] Last lesson opens its course completion/certificate in Starpath
 - [x] Undo checked lessons on Today with safe XP reversal
