@@ -175,7 +175,7 @@ function Roadmap() {
                   <div className="flex">
                     <Button size="icon" variant="ghost" aria-label="Move up" onClick={() => move(i, -1)}><ArrowUp className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" aria-label="Move down" onClick={() => move(i, 1)}><ArrowDown className="h-4 w-4" /></Button>
-                    <Button size="sm" variant="ghost" className="rounded-full" aria-label="Move to Extra Credit" title="Move to Extra Credit" onClick={() => setExtra(c.id, true)}><Sparkles className="h-4 w-4" /><span className="hidden sm:inline">To Extra Credit</span></Button>
+                    <Button size="icon" variant="ghost" aria-label="Move to Extra Credit" title="Move to Extra Credit" onClick={() => setExtra(c.id, true)}><Sparkles className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" aria-label="Remove" onClick={() => remove(c.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 </div>
@@ -199,7 +199,7 @@ function Roadmap() {
                 <div className="min-w-0 flex-1"><div className="font-semibold">{c.title} {e.completed_at && "🎓"}</div><div className="text-xs text-muted-foreground">{c.provider} · {doneN}/{c.units.length} units</div></div>
                 <Button size="icon" variant="ghost" aria-label="Move up" onClick={() => moveIn(extra, i, -1)}><ArrowUp className="h-4 w-4" /></Button>
                 <Button size="icon" variant="ghost" aria-label="Move down" onClick={() => moveIn(extra, i, 1)}><ArrowDown className="h-4 w-4" /></Button>
-                <Button size="sm" variant="ghost" className="rounded-full" aria-label="Move to Starpath" title="Move to Starpath" onClick={() => setExtra(c.id, false)}><MapIcon className="h-4 w-4" /><span className="hidden sm:inline">To Starpath</span></Button>
+                <Button size="icon" variant="ghost" aria-label="Move to Starpath" title="Move to Starpath" onClick={() => setExtra(c.id, false)}><MapIcon className="h-4 w-4" /></Button>
                 <Button size="icon" variant="ghost" aria-label="Remove" onClick={() => remove(c.id)}><Trash2 className="h-4 w-4" /></Button>
                 {(doneN === c.units.length || e.completed_at) && <div className="w-full"><CertDialog courseId={c.id} current={e.certificate_url} done={!!e.completed_at} defaultOpen={selectedCourse === c.id && !e.completed_at} onSaved={refresh} /></div>}
               </div>); })}
