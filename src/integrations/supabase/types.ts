@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      arcade_games: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          difficulty: string
+          emoji: string
+          hidden: boolean
+          id: string
+          is_free: boolean
+          platform: string
+          sort_order: number
+          title: string
+          url: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string
+          difficulty?: string
+          emoji?: string
+          hidden?: boolean
+          id?: string
+          is_free?: boolean
+          platform?: string
+          sort_order?: number
+          title: string
+          url: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          difficulty?: string
+          emoji?: string
+          hidden?: boolean
+          id?: string
+          is_free?: boolean
+          platform?: string
+          sort_order?: number
+          title?: string
+          url?: string
+        }
+        Relationships: []
+      }
       catalog_items: {
         Row: {
           data: Json
@@ -315,6 +360,32 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_game_plays: {
+        Row: {
+          game_id: string
+          played_at: string
+          user_id: string
+        }
+        Insert: {
+          game_id: string
+          played_at?: string
+          user_id?: string
+        }
+        Update: {
+          game_id?: string
+          played_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_game_plays_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "arcade_games"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
