@@ -48,8 +48,8 @@ export function ArcadeAdmin() {
 function GameForm({ game, onClose, onSave }: { game: ArcadeGame; onClose: () => void; onSave: (g: ArcadeGame) => void }) {
   const [f, setF] = useState(game);
   const submit = () => {
-    if (!f.title.trim()) return toast.error("Title is required");
-    if (!/^https:\/\/\S+\.\S+/.test(f.url)) return toast.error("Use a full https:// link");
+    if (!f.title.trim()) { toast.error("Title is required"); return; }
+    if (!/^https:\/\/\S+\.\S+/.test(f.url)) { toast.error("Use a full https:// link"); return; }
     onSave({ ...f, title: f.title.trim(), url: f.url.trim(), sort_order: Number(f.sort_order) || 0 });
   };
   return (
