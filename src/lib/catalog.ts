@@ -78,10 +78,10 @@ export const TRACKS: Track[] = [
   { id: "frontend", title: "Frontend Wizard", emoji: "🎨", description: "HTML, CSS, JavaScript and React — build gorgeous interfaces.", courses: ["odin-foundations", "fcc-rwd", "fcc-js", "ex-js", "odin-js", "odin-react", "ex-ts", "rm-frontend"] },
   { id: "backend", title: "Backend Builder", emoji: "⚙️", description: "Python, Go, SQL and servers — power the web from behind.", courses: ["boot-python", "boot-linux", "boot-git", "boot-sql", "boot-go", "boot-http", "boot-docker", "rm-backend"] },
   { id: "fullstack", title: "Full Stack Hero", emoji: "🦸", description: "Front to back with The Odin Project and friends.", courses: ["odin-foundations", "fcc-js", "odin-js", "odin-react", "boot-sql", "odin-node", "boot-docker", "rm-backend"] },
-  { id: "game-development", title: "Game Development", emoji: "🎮", description: "From coding foundations to playable 2D games with Lua and LÖVE, then explore engines and game-development careers.", courses: ["cs50x", "cs50-games", "rm-game-dev"] },
-  { id: "ui-ux", title: "UI/UX & Product Design", emoji: "✨", description: "Understand users and product goals, then turn ideas into polished interfaces and interactive Figma prototypes.", courses: ["rm-ux-design", "fcc-figma-ux", "fcc-figma-ui"] },
+  { id: "game-development", title: "Game Crafter", emoji: "🎮", description: "From coding foundations to playable 2D games with Lua and LÖVE, then explore engines and game-development careers.", courses: ["cs50x", "cs50-games", "rm-game-dev"] },
+  { id: "ui-ux", title: "Design Alchemist", emoji: "✨", description: "Understand users and product goals, then turn ideas into polished interfaces and interactive Figma prototypes.", courses: ["rm-ux-design", "fcc-figma-ux", "fcc-figma-ui"] },
   { id: "data", title: "Database Pro", emoji: "🗄️", description: "SQL, PostgreSQL and data modeling mastery.", courses: ["boot-sql", "cs50sql", "fcc-rdb", "rm-postgres"] },
-  { id: "cs", title: "Computer Science", emoji: "🧠", description: "Algorithms, data structures and systems from first principles.", courses: ["cs50x", "boot-python", "boot-oop", "boot-dsa", "cs50sql", "rm-cs"] },
+  { id: "cs", title: "CS Scholar", emoji: "🧠", description: "Algorithms, data structures and systems from first principles.", courses: ["cs50x", "boot-python", "boot-oop", "boot-dsa", "cs50sql", "rm-cs"] },
 ];
 
 export const BASE_TRACKS: Track[] = TRACKS.map((t) => ({ ...t }));
