@@ -30,6 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- Arcade want-to-play markers use a separate owner-scoped wishlist; filter by explicit saved markers independently of Played tracking. Why: unplayed games are not automatically wishlisted.
 - Password recovery uses the public `/reset-password` page, validates a recovery link/session, and updates only the new password; ordinary sign-in sessions cannot open its form. Why: email recovery must work without redirecting to Today or requiring the old password.
 - Starpath sections use `groupCourses` to separate completed enrollments from active and Extra Credit courses and sort the unified completion list. Why: prior and newly completed courses must appear together without remaining in active lists.
 - Friend removal deletes only the selected accepted friendship through the caller's RLS-scoped client, then refreshes social data; shared squad memberships are untouched. Why: unlinking friends must not remove squad participation.
