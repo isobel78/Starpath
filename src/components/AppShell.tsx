@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Home, Map, CalendarDays, Library, Users, Star, LogOut, Settings, Shield } from "lucide-react";
+import { Home, Map, CalendarDays, Library, Users, Star, LogOut, Settings, Shield, Gamepad2 } from "lucide-react";
 import { useIsAdmin } from "@/lib/catalog-store";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ const NAV = [
   { to: "/roadmap", label: "Starpath", icon: Map },
   { to: "/calendar", label: "Week", icon: CalendarDays },
   { to: "/catalog", label: "Catalog", icon: Library },
+  { to: "/arcade", label: "Arcade", icon: Gamepad2 },
   { to: "/squads", label: "Squads", icon: Users },
 ] as const;
 
@@ -49,9 +50,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6 md:py-10">{children}</main>
       <nav className="fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] select-none border-t border-border bg-card/95 backdrop-blur md:hidden">
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-6">
           {NAV.map((n) => (
-            <Link key={n.to} to={n.to} className="flex flex-col items-center gap-1 py-3 text-xs font-bold text-muted-foreground"
+            <Link key={n.to} to={n.to} className="flex flex-col items-center gap-1 py-3 text-[11px] font-bold text-muted-foreground"
               activeProps={{ className: "text-primary" }}>
               <n.icon className="h-5 w-5" />
               {n.label}
