@@ -22,3 +22,4 @@
 - [x] Delete squads; colored per-member weekly goal bars; new squads only count XP earned after joining
 - [x] Promoted learner courses appear once in the catalog
 - [x] Change email in Settings
+- [x] Arcade: learning games page, Played-it tracking, admin Arcade tab

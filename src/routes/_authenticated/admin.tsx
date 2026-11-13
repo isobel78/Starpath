@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, Pencil, EyeOff, Eye, RotateCcw, Trash2, ArrowUpCircle, ExternalLink } from "lucide-react";
+import { ArcadeAdmin } from "@/components/ArcadeAdmin";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +31,7 @@ function AdminPage() {
   const qc = useQueryClient();
   const rowsQ = useQuery(catalogQuery);
   const rows = rowsQ.data ?? [];
-  const [tab, setTab] = useState<"courses" | "tracks" | "learners">("courses");
+  const [tab, setTab] = useState<"courses" | "tracks" | "learners" | "arcade">("courses");
   const learnerQ = useQuery({
     queryKey: ["admin-user-courses"], enabled: isAdmin,
     queryFn: async () => {
@@ -75,11 +76,11 @@ function AdminPage() {
     <AppShell>
       <h1 className="text-4xl font-bold">Curriculum <span className="text-gradient">admin</span></h1>
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        {(["courses", "tracks", "learners"] as const).map((t) => <button key={t} onClick={() => setTab(t)} className={`rounded-full px-4 py-2 font-bold ${tab === t ? "bg-primary text-primary-foreground shadow-glow" : "bg-muted"}`}>{t === "courses" ? `Courses (${COURSES.filter((c) => !c.userAdded).length})` : t === "tracks" ? `Career tracks (${TRACKS.length})` : `Learner-added (${learnerQ.data?.length ?? 0})`}</button>)}
-        <Button className="ml-auto rounded-full" onClick={() => tab === "courses" ? setEditCourse(blankCourse) : setEditTrack({ id: "", title: "", emoji: "✨", description: "", courses: [] })}><Plus className="h-4 w-4" /> New {tab === "courses" ? "course" : "track"}</Button>
+        {(["courses", "tracks", "learners", "arcade"] as const).map((t) => <button key={t} onClick={() => setTab(t)} className={`rounded-full px-4 py-2 font-bold ${tab === t ? "bg-primary text-primary-foreground shadow-glow" : "bg-muted"}`}>{t === "courses" ? `Courses (${COURSES.filter((c) => !c.userAdded).length})` : t === "tracks" ? `Career tracks (${TRACKS.length})` : t === "learners" ? `Learner-added (${learnerQ.data?.length ?? 0})` : "Arcade 🕹️"}</button>)}
+        {tab !== "arcade" && tab !== "learners" && <Button className="ml-auto rounded-full" onClick={() => tab === "courses" ? setEditCourse(blankCourse) : setEditTrack({ id: "", title: "", emoji: "✨", description: "", courses: [] })}><Plus className="h-4 w-4" /> New {tab === "courses" ? "course" : "track"}</Button>}
       </div>
 
-      {tab === "learners" ? (
+      {tab === "arcade" ? <ArcadeAdmin /> : tab === "learners" ? (
         <div className="mt-4 space-y-2">
           <p className="text-sm text-muted-foreground">Courses learners added for themselves. Only the learner who added one sees it — promote it to make it part of everyone's catalog.</p>
           {(learnerQ.data ?? []).length === 0 && <p className="text-muted-foreground">No learner-added courses yet.</p>}
