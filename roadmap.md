@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Admin: total users and course popularity/completion statistics
 - [x] Add and verify saved Want to play markers on every Arcade game
 - [x] Add UI/UX & Product Design track with verified UX and Figma sources
 - [x] Order tracks: Frontend, Backend, Full Stack, Game, UI/UX, Database, Computer Science
