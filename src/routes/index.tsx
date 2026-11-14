@@ -12,7 +12,7 @@ export const Route = createFileRoute("/")({
       { title: "Starpath — Build Your Learning Roadmap" },
       { name: "description", content: "Mix courses from boot.dev, freeCodeCamp, Exercism, The Odin Project, CS50 and Roadmap.sh into one glowing, gamified study plan." },
       { property: "og:title", content: "Starpath — Build Your Learning Roadmap" },
-      { property: "og:description", content: "Explore frontend, backend, full stack, game development, UI/UX & product design, databases and computer science with smart scheduling, streaks and study squads." },
+      { property: "og:description", content: "Build Starpaths for development, cloud, networking, game design, UI/UX, databases and computer science with smart scheduling, streaks and study squads." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "https://starpath.atlantadaniel.com/" }, { property: "og:image", content: "https://starpath.atlantadaniel.com/og-home.jpg" }, { name: "twitter:image", content: "https://starpath.atlantadaniel.com/og-home.jpg" }, { property: "og:image:width", content: "1200" }, { property: "og:image:height", content: "630" }, { property: "og:video", content: "https://starpath.atlantadaniel.com/og-home.mp4" }, { property: "og:video:secure_url", content: "https://starpath.atlantadaniel.com/og-home.mp4" }, { property: "og:video:type", content: "video/mp4" }, { property: "og:video:width", content: "1200" }, { property: "og:video:height", content: "630" },
@@ -40,7 +40,7 @@ function Index() {
         ))}
         <p className="relative z-10 mb-4 inline-block rounded-full bg-background/20 px-4 py-1 text-sm font-bold">✨ Learning, but make it sparkle ✨</p>
         <h1 className="relative z-10 max-w-3xl text-5xl font-bold leading-tight md:text-7xl">Chart your path to becoming a developer.</h1>
-        <p className="relative z-10 mt-6 max-w-xl text-lg opacity-90">Create a personal Starpath for frontend, backend, full stack, game development, or UI/UX &amp; product design — with daily goals, streaks and friends to keep you going.</p>
+        <p className="relative z-10 mt-6 max-w-xl text-lg opacity-90">Create a personal Starpath for development, cloud, networking, game design, UI/UX and more — with daily goals, streaks and friends to keep you going.</p>
         <div className="relative z-10 mt-8 flex flex-wrap gap-3">
           <Button asChild size="lg" className="rounded-full bg-star text-star-foreground shadow-star hover:bg-star/90"><Link to="/roadmap">Start my Starpath</Link></Button>
           <Button asChild size="lg" variant="outline" className="rounded-full border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-background/20 hover:text-primary-foreground"><Link to="/catalog">Browse catalog</Link></Button>
