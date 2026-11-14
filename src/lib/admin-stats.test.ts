@@ -1,7 +1,7 @@
 import { expect, it, vi } from "vitest";
 import { summarizeEnrollments } from "./admin-stats";
 
-vi.mock("@tanstack/react-start", () => ({ createServerFn: () => { const builder = { middleware: () => builder, inputValidator: () => builder, handler: (handler: unknown) => handler }; return builder; } }));
+vi.mock("@tanstack/react-start", () => ({ createServerFn: () => { const builder = { middleware: () => builder, validator: () => builder, handler: (handler: unknown) => handler }; return builder; } }));
 vi.mock("@/integrations/supabase/auth-middleware", () => ({ requireSupabaseAuth: {} }));
 const admin = vi.hoisted(() => ({ listUsers: vi.fn() }));
 const profileQuery = vi.hoisted(() => ({ in: vi.fn() }));

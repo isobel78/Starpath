@@ -5,7 +5,7 @@ import { z } from "zod";
 
 export const getRegisteredUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ page: z.number().int().min(1).max(100000) }))
+  .validator(z.object({ page: z.number().int().min(1).max(100000) }))
   .handler(async ({ context, data }) => {
     const { data: isAdmin, error: roleError } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (roleError || !isAdmin) throw new Error("Admin access required");
