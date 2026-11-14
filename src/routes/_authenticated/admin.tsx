@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, Pencil, EyeOff, Eye, RotateCcw, Trash2, ArrowUpCircle, ExternalLink } from "lucide-react";
 import { ArcadeAdmin } from "@/components/ArcadeAdmin";
+import { AdminStats } from "@/components/AdminStats";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,7 @@ function AdminPage() {
   const qc = useQueryClient();
   const rowsQ = useQuery(catalogQuery);
   const rows = rowsQ.data ?? [];
-  const [tab, setTab] = useState<"courses" | "tracks" | "learners" | "arcade">("courses");
+  const [tab, setTab] = useState<"stats" | "courses" | "tracks" | "learners" | "arcade">("stats");
   const learnerQ = useQuery({
     queryKey: ["admin-user-courses"], enabled: isAdmin,
     queryFn: async () => {
@@ -76,11 +77,11 @@ function AdminPage() {
     <AppShell>
       <h1 className="text-4xl font-bold">Curriculum <span className="text-gradient">admin</span></h1>
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        {(["courses", "tracks", "learners", "arcade"] as const).map((t) => <button key={t} onClick={() => setTab(t)} className={`rounded-full px-4 py-2 font-bold ${tab === t ? "bg-primary text-primary-foreground shadow-glow" : "bg-muted"}`}>{t === "courses" ? `Courses (${COURSES.filter((c) => !c.userAdded).length})` : t === "tracks" ? `Career tracks (${TRACKS.length})` : t === "learners" ? `Learner-added (${learnerQ.data?.length ?? 0})` : "Arcade 🕹️"}</button>)}
-        {tab !== "arcade" && tab !== "learners" && <Button className="ml-auto rounded-full" onClick={() => tab === "courses" ? setEditCourse(blankCourse) : setEditTrack({ id: "", title: "", emoji: "✨", description: "", courses: [] })}><Plus className="h-4 w-4" /> New {tab === "courses" ? "course" : "track"}</Button>}
+        {(["stats", "courses", "tracks", "learners", "arcade"] as const).map((t) => <Button key={t} onClick={() => setTab(t)} variant={tab === t ? "default" : "secondary"} className="rounded-full">{t === "stats" ? "Statistics" : t === "courses" ? `Courses (${COURSES.filter((c) => !c.userAdded).length})` : t === "tracks" ? `Career tracks (${TRACKS.length})` : t === "learners" ? `Learner-added (${learnerQ.data?.length ?? 0})` : "Arcade 🕹️"}</Button>)}
+        {(tab === "courses" || tab === "tracks") && <Button className="ml-auto rounded-full" onClick={() => tab === "courses" ? setEditCourse(blankCourse) : setEditTrack({ id: "", title: "", emoji: "✨", description: "", courses: [] })}><Plus className="h-4 w-4" /> New {tab === "courses" ? "course" : "track"}</Button>}
       </div>
 
-      {tab === "arcade" ? <ArcadeAdmin /> : tab === "learners" ? (
+      {tab === "stats" ? <AdminStats /> : tab === "arcade" ? <ArcadeAdmin /> : tab === "learners" ? (
         <div className="mt-4 space-y-2">
           <p className="text-sm text-muted-foreground">Courses learners added for themselves. Only the learner who added one sees it — promote it to make it part of everyone's catalog.</p>
           {(learnerQ.data ?? []).length === 0 && <p className="text-muted-foreground">No learner-added courses yet.</p>}
@@ -135,7 +136,7 @@ function AdminPage() {
         </div>
       )}
 
-      {hidden.length > 0 && (
+      {(tab === "courses" || tab === "tracks") && hidden.length > 0 && (
         <section className="mt-8">
           <h2 className="text-xl font-bold">Hidden</h2>
           <div className="mt-2 flex flex-wrap gap-2">
