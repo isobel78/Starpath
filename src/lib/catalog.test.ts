@@ -15,7 +15,7 @@ describe("catalog rules", () => {
   });
   it("keeps the requested career track order when catalog overrides load", () => {
     applyCatalogRows([{ kind: "track", id: "frontend", data: { description: "Updated" }, hidden: false }]);
-    expect(TRACKS.map((track) => track.id)).toEqual(["frontend", "backend", "fullstack", "game-development", "ui-ux", "data", "cs"]);
+    expect(TRACKS.map((track) => track.id)).toEqual(["frontend", "backend", "fullstack", "game-development", "ui-ux", "cloud", "networking", "data", "cs"]);
   });
   it("includes a Game Development track with foundations before game projects", () => {
     expect(TRACKS.find((track) => track.id === "game-development")?.courses).toEqual(["cs50x", "cs50-games", "rm-game-dev"]);
