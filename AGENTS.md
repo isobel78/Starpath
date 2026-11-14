@@ -30,7 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
-- Admin statistics are aggregated in an authenticated server function after a caller-scoped admin role check; only counts and course aggregates reach the browser. Why: account data and cross-user enrollments must remain private.
+- Admin statistics and the paginated registered-user directory use authenticated server functions after a caller-scoped admin role check; return aggregates or minimal directory fields, never raw auth records. Why: account data and cross-user enrollments must remain private from non-admins.
 - Arcade want-to-play markers use a separate owner-scoped wishlist; filter by explicit saved markers independently of Played tracking. Why: unplayed games are not automatically wishlisted.
 - Password recovery uses the public `/reset-password` page, validates a recovery link/session, and updates only the new password; ordinary sign-in sessions cannot open its form. Why: email recovery must work without redirecting to Today or requiring the old password.
 - Starpath sections use `groupCourses` to separate completed enrollments from active and Extra Credit courses and sort the unified completion list. Why: prior and newly completed courses must appear together without remaining in active lists.
