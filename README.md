@@ -15,17 +15,9 @@ Features:
 - Social & Squads: users can have friends, form friend groups/study squads, set weekly group goals, and participate in friendly XP leaderboards and cheer nudges.
 - Design: Bright, colorful, and fun aesthetic featuring hot pink, oranges, purples, and glowing yellow stars. Exciting, vibrant, and energizing.
 
-This project was built with [Lovable](https://lovable.dev).
+This project was built with [Lovable](https://lovable.dev) as part of She Builds: Learning Edition 2026.
 
-**Live app**: https://mystarpath.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/ee8511cb-b8e8-44bb-9548-31e8bb616260).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+**Live app**: https://starpath.atlantadaniel.com
 
 ## Development
 
