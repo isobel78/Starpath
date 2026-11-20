@@ -3,7 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { Users, BookOpen, GraduationCap, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getAdminStats } from "@/lib/admin-stats.functions";
-import { COURSES } from "@/lib/catalog";
+import { COURSE_MAP } from "@/lib/catalog";
+import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { AdminUsers } from "@/components/AdminUsers";
 
@@ -11,6 +12,10 @@ export function AdminStats() {
   const [showUsers, setShowUsers] = useState(false);
   const fetchStats = useServerFn(getAdminStats);
   const stats = useQuery({ queryKey: ["admin-stats"], queryFn: () => fetchStats(), staleTime: 30_000, refetchOnMount: "always" });
+  const added = useQuery({ queryKey: ["admin-user-course-names"], queryFn: async () => {
+    const { data } = await supabase.from("user_courses").select("id, data");
+    return new Map((data ?? []).map((r) => { const d = r.data as { title?: string; provider?: string }; return [r.id, { title: d.title ?? r.id, provider: d.provider ?? "Learner-added" }]; }));
+  } });
   if (stats.isPending) return <p className="mt-6 animate-pulse text-muted-foreground">Loading statistics…</p>;
   if (stats.isError) return <div className="mt-6 flex flex-wrap items-center gap-3"><p role="alert" className="text-destructive">Couldn't load statistics.</p><Button variant="outline" onClick={() => stats.refetch()}><RefreshCw className="h-4 w-4" /> Retry</Button></div>;
   const data = stats.data;
@@ -26,7 +31,7 @@ export function AdminStats() {
     <div>
       <div className="mb-3 flex items-center justify-between gap-3"><h2 className="text-xl font-bold">Popular courses</h2><Button size="sm" variant="outline" disabled={stats.isFetching} onClick={() => stats.refetch()}><RefreshCw className={`h-4 w-4 ${stats.isFetching ? "animate-spin" : ""}`} /> Refresh</Button></div>
       {data.popularity.length === 0 ? <p className="text-muted-foreground">No course enrollments yet.</p> : <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-border text-muted-foreground"><th className="py-3 pr-4 font-semibold">Course</th><th className="px-3 py-3 text-right font-semibold">Learners</th><th className="px-3 py-3 text-right font-semibold">Completed</th><th className="py-3 pl-3 text-right font-semibold">Completion</th></tr></thead><tbody>{data.popularity.map((row) => {
-        const course = COURSES.find((c) => c.id === row.courseId);
+        const course = COURSE_MAP[row.courseId] ?? added.data?.get(row.courseId);
         return <tr key={row.courseId} className="border-b border-border"><td className="min-w-44 py-3 pr-4"><p className="font-semibold">{course?.title ?? row.courseId}</p>{course && <p className="text-xs text-muted-foreground">{course.provider}</p>}</td><td className="px-3 py-3 text-right tabular-nums">{row.learners}</td><td className="px-3 py-3 text-right tabular-nums">{row.completed}</td><td className="py-3 pl-3 text-right tabular-nums">{row.completionRate}%</td></tr>;
       })}</tbody></table></div>}
     </div>
