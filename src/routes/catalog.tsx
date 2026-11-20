@@ -7,7 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { APPROVED_SITES, providerForUrl } from "@/lib/providers";
+import { APPROVED_SITES, providerForUrl, providerForAdminUrl } from "@/lib/providers";
 import { draftCourseFromUrl, type CourseDraft } from "@/lib/course-import.functions";
 
 import { AppShell } from "@/components/AppShell";
@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { COURSES, COURSE_MAP, PROVIDER_COLORS, KNOWN_AREAS, type Area, type Provider } from "@/lib/catalog";
-import { useCatalog } from "@/lib/catalog-store";
+import { useCatalog, useIsAdmin } from "@/lib/catalog-store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Award } from "lucide-react";
 import { useMyData, useRefreshMe } from "@/lib/data";
@@ -51,6 +51,7 @@ function Catalog() {
   const { user, data } = useMyData();
   const refresh = useRefreshMe();
   const version = useCatalog();
+  const isAdmin = useIsAdmin(user?.id);
   const enrolled = new Set(data?.enrollments.map((e) => e.course_id));
   const doneSet = new Set(data?.enrollments.filter((e) => e.completed_at).map((e) => e.course_id));
   const PROVIDERS: Provider[] = [...new Set(COURSES.map((c) => c.provider))];
@@ -78,7 +79,7 @@ function Catalog() {
       <h1 className="text-4xl font-bold">Course <span className="text-gradient">catalog</span></h1>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
         <p className="text-muted-foreground">{COURSES.length} hand-picked courses from six top learning platforms.</p>
-        <AddOwnCourse signedIn={!!user} onAdded={(id, extra) => { qc.invalidateQueries({ queryKey: ["my-courses"] }); void add(id, extra); }} />
+        <AddOwnCourse signedIn={!!user} isAdmin={isAdmin} onAdded={(id, extra) => { qc.invalidateQueries({ queryKey: ["my-courses"] }); void add(id, extra); }} />
       </div>
       <Input placeholder="Search courses…" value={q} onChange={(e) => setQ(e.target.value)} className="mt-6 h-12 rounded-full" />
       <div className="mt-4 flex flex-wrap gap-2"><Chip on={!prov} onClick={() => setProv(null)}>All sources</Chip>{PROVIDERS.map((p) => <Chip key={p} on={prov === p} onClick={() => setProv(p)}>{p}</Chip>)}</div>
@@ -152,9 +153,9 @@ function PriorDialog({ courseId, signedIn, onSaved }: { courseId: string; signed
   );
 }
 
-const NOT_APPROVED = "Oops! 🌟 Starpath can only add courses from boot.dev, freeCodeCamp, CS50, The Odin Project, Exercism or Roadmap.sh for now. Try a link from one of those sites!";
+const NOT_APPROVED = "Oops! 🌟 Starpath can only add courses from boot.dev, freeCodeCamp, CS50 (including CS50 on edX), The Odin Project, Exercism or Roadmap.sh for now. Try a link from one of those sites!";
 
-function AddOwnCourse({ signedIn, onAdded }: { signedIn: boolean; onAdded: (id: string, extra: boolean) => void }) {
+function AddOwnCourse({ signedIn, isAdmin, onAdded }: { signedIn: boolean; isAdmin: boolean; onAdded: (id: string, extra: boolean) => void }) {
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("");
   const [draft, setDraft] = useState<CourseDraft | null>(null);
@@ -164,7 +165,7 @@ function AddOwnCourse({ signedIn, onAdded }: { signedIn: boolean; onAdded: (id: 
   const reset = () => { setUrl(""); setDraft(null); setErr(""); };
   const read = async () => {
     setErr("");
-    if (!providerForUrl(url)) { setErr(NOT_APPROVED); return; }
+    if (!(isAdmin ? providerForAdminUrl(url) : providerForUrl(url))) { setErr(isAdmin ? "Use a full https:// link." : NOT_APPROVED); return; }
     setBusy(true);
     try {
       const r = await draftFn({ data: { url } });
@@ -189,7 +190,7 @@ function AddOwnCourse({ signedIn, onAdded }: { signedIn: boolean; onAdded: (id: 
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>✨ Add your own course</DialogTitle></DialogHeader>
         {!draft ? (<>
-          <p className="text-sm text-muted-foreground">Paste a link to a course page. For now, courses can only come from these sites:</p>
+          <p className="text-sm text-muted-foreground">Paste a link to a course page. For now, courses can only come from these sites{isAdmin ? " (as admin, you can add a course from any site)" : ""}:</p>
           <div className="flex flex-wrap gap-2">{APPROVED_SITES.map((s) => <a key={s.provider} href={s.url} target="_blank" rel="noreferrer" className="flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-sm font-bold hover:bg-primary hover:text-primary-foreground">{s.provider} <ExternalLink className="h-3 w-3" /></a>)}</div>
           <Input placeholder="https://www.freecodecamp.org/learn/…" value={url} onChange={(e) => { setUrl(e.target.value); setErr(""); }} />
           {err && <p role="alert" className="rounded-2xl bg-star/30 p-3 text-sm font-semibold">{err}</p>}

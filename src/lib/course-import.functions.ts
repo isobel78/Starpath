@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { providerForUrl } from "./providers";
+import { providerForUrl, providerForAdminUrl } from "./providers";
 import { KNOWN_AREAS } from "./catalog";
 
 export interface CourseDraft { title: string; blurb: string; provider: string; area: string; hours: number; units: string[]; tags: string[]; url: string }
@@ -11,8 +11,12 @@ const strip = (h: string) => h.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?
 export const draftCourseFromUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: { url: string }) => ({ url: String(d.url ?? "").trim().slice(0, 500) }))
-  .handler(async ({ data }): Promise<{ draft: CourseDraft | null; error?: string }> => {
-    const provider = providerForUrl(data.url);
+  .handler(async ({ data, context }): Promise<{ draft: CourseDraft | null; error?: string }> => {
+    let provider = providerForUrl(data.url);
+    if (!provider) {
+      const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+      if (isAdmin) provider = providerForAdminUrl(data.url);
+    }
     if (!provider) return { draft: null, error: "not-approved" };
     let pageTitle = "", desc = "", text = "";
     try {

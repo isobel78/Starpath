@@ -99,6 +99,13 @@
       "when": 1794596358051,
       "tag": "0013_arcade_want_to_play",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795186202445,
+      "tag": "0014_user_courses_edx_and_admin_any_site",
+      "breakpoints": true
     }
   ]
 }
