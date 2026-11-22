@@ -157,10 +157,14 @@ function CourseForm({ course, onClose, onSave }: { course: Course; onClose: () =
   const autoId = standardCourseId(f.title, f.provider, (x) => !!COURSE_MAP[x]);
   const prereqList = list(f.prereqsS);
   const prereqOptions = [...COURSES].filter((c) => !c.userAdded && c.id !== course.id && !prereqList.includes(c.id)).sort((a, b) => a.title.localeCompare(b.title));
+  const providerOptions = [...new Set([...KNOWN_PROVIDERS, ...COURSES.filter((c) => !c.userAdded).map((c) => c.provider), course.provider].filter(Boolean))];
+  const areaOptions = [...new Set([...KNOWN_AREAS, ...COURSES.filter((c) => !c.userAdded).map((c) => c.area), course.area].filter(Boolean))];
+  const [newSource, setNewSource] = useState(false);
   const setPrereqs = (ids: string[]) => setF({ ...f, prereqsS: ids.join(", ") });
   const submit = () => {
     const id = isNew ? (f.id.trim() ? slug(f.id) : autoId) : course.id;
     if (!id || !f.title.trim()) { toast.error("Title is required"); return; }
+    if (!f.provider.trim()) { toast.error("Pick or name a source"); return; }
     if (isNew && COURSE_MAP[id]) { toast.error("A course with that id already exists"); return; }
     if (!/^https:\/\/\S+\.\S+/.test(f.url)) { toast.error("Use a full https:// link"); return; }
     const units = f.unitsS.split("\n").map((x) => x.trim()).filter(Boolean);
@@ -178,11 +182,19 @@ function CourseForm({ course, onClose, onSave }: { course: Course; onClose: () =
           <div><Label>Title</Label><Input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></div>
           {isNew && <div><Label>ID (auto, follows platform-name standard)</Label><Input value={f.id} onChange={(e) => setF({ ...f, id: e.target.value })} placeholder={autoId} /></div>}
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>Platform</Label><Input list="providers" value={f.provider} onChange={(e) => setF({ ...f, provider: e.target.value })} /></div>
-            <div><Label>Area</Label><Input list="areas" value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })} /></div>
+            <div><Label htmlFor="course-platform">Platform</Label>
+              <select id="course-platform" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={newSource ? "__new" : f.provider} onChange={(e) => { if (e.target.value === "__new") { setNewSource(true); setF({ ...f, provider: "" }); } else { setNewSource(false); setF({ ...f, provider: e.target.value }); } }}>
+                {providerOptions.map((p) => <option key={p} value={p}>{p}</option>)}
+                <option value="__new">+ Add new source…</option>
+              </select>
+              {newSource && <Input className="mt-2" autoFocus aria-label="New source name" placeholder="Source name, e.g. Khan Academy" value={f.provider} onChange={(e) => setF({ ...f, provider: e.target.value })} />}
+            </div>
+            <div><Label htmlFor="course-area">Area</Label>
+              <select id="course-area" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })}>
+                {areaOptions.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
           </div>
-          <datalist id="providers">{KNOWN_PROVIDERS.map((p) => <option key={p} value={p} />)}</datalist>
-          <datalist id="areas">{KNOWN_AREAS.map((p) => <option key={p} value={p} />)}</datalist>
           <div className="grid grid-cols-3 gap-3">
             <div><Label>Hours</Label><Input type="number" min={1} value={f.hoursS} onChange={(e) => setF({ ...f, hoursS: e.target.value })} /></div>
             <div className="col-span-2"><Label>URL</Label><Input value={f.url} onChange={(e) => setF({ ...f, url: e.target.value })} /></div>
