@@ -1,12 +1,19 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { Star, Flame, Trophy, Users, CalendarCheck, Map } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { TRACKS } from "@/lib/catalog";
 import { useCatalog } from "@/lib/catalog-store";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
+  beforeLoad: async () => {
+    // Signed-in learners go straight to Today; visitors see the landing page.
+    if (typeof window === "undefined") return;
+    const { data } = await supabase.auth.getUser();
+    if (data.user) throw redirect({ to: "/dashboard" });
+  },
   head: () => ({
     meta: [
       { title: "Starpath — Build Your Learning Roadmap" },
