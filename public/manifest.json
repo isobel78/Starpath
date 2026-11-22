@@ -3,7 +3,7 @@
   "name": "Starpath",
   "short_name": "Starpath",
   "description": "Build your personal coding learning Starpath.",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
   "background_color": "#1a0b2e",
