@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0">
       <header className="sticky top-0 z-30 pt-[env(safe-area-inset-top)] border-b border-border bg-background/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2 font-display text-2xl font-bold">
+          <Link to="/" search={{ home: 1 }} className="flex items-center gap-2 font-display text-2xl font-bold">
             <Star className="h-7 w-7 animate-twinkle fill-star text-star" />
             <span className="text-gradient">Starpath</span>
           </Link>

@@ -1,4 +1,5 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Star, Flame, Trophy, Users, CalendarCheck, Map } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -8,9 +9,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
-  beforeLoad: async () => {
+  // ?home=1 means the learner clicked the logo on purpose, so keep them here.
+  validateSearch: (s: Record<string, unknown>): { home?: 1 } => (s["home"] ? { home: 1 } : {}),
+  beforeLoad: async ({ search }) => {
     // Signed-in learners go straight to Today; visitors see the landing page.
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || search.home) return;
     const { data } = await supabase.auth.getUser();
     if (data.user) throw redirect({ to: "/dashboard" });
   },
@@ -39,6 +42,16 @@ const FEATURES = [
 
 function Index() {
   useCatalog();
+  const { home } = Route.useSearch();
+  const navigate = useNavigate();
+  useEffect(() => {
+    // Cold launches render before the saved session loads; forward once it does.
+    if (home) return;
+    const go = (signedIn: boolean) => { if (signedIn) void navigate({ to: "/dashboard", replace: true }); };
+    void supabase.auth.getSession().then(({ data }) => go(!!data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => go(!!session));
+    return () => sub.subscription.unsubscribe();
+  }, [home, navigate]);
   return (
     <AppShell>
       <section className="relative overflow-hidden rounded-[2rem] bg-hero px-6 py-16 text-primary-foreground shadow-glow md:px-14 md:py-24">
