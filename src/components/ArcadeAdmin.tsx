@@ -5,6 +5,7 @@ import { Pencil, EyeOff, Eye, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,13 +41,15 @@ export function ArcadeAdmin() {
           <Button size="sm" variant="ghost" className="text-destructive" onClick={() => del(g)}><Trash2 className="h-4 w-4" /> Delete</Button>
         </div>
       ))}
-      {edit && <GameForm game={edit} onClose={() => setEdit(null)} onSave={save} />}
+      {edit && <GameForm game={edit} categories={[...new Set([...ARCADE_CATEGORIES, ...games.map((g) => g.category)])]} onClose={() => setEdit(null)} onSave={save} />}
     </div>
   );
 }
 
-function GameForm({ game, onClose, onSave }: { game: ArcadeGame; onClose: () => void; onSave: (g: ArcadeGame) => void }) {
+function GameForm({ game, categories, onClose, onSave }: { game: ArcadeGame; categories: string[]; onClose: () => void; onSave: (g: ArcadeGame) => void }) {
   const [f, setF] = useState(game);
+  const [newCategory, setNewCategory] = useState(false);
+  const categoryOptions = [...new Set([...categories, game.category])].filter(Boolean);
   const submit = () => {
     if (!f.title.trim()) { toast.error("Title is required"); return; }
     if (!/^https:\/\/\S+\.\S+/.test(f.url)) { toast.error("Use a full https:// link"); return; }
@@ -64,10 +67,21 @@ function GameForm({ game, onClose, onSave }: { game: ArcadeGame; onClose: () => 
           <div><Label>Game link</Label><Input value={f.url} onChange={(e) => setF({ ...f, url: e.target.value })} /></div>
           <div><Label>Description</Label><Textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>Category</Label><Input list="arcade-cats" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} /></div>
+            <div><Label htmlFor="game-category">Category</Label>
+              <Select value={newCategory ? "__new" : f.category} onValueChange={(value) => {
+                setNewCategory(value === "__new");
+                setF({ ...f, category: value === "__new" ? "" : value });
+              }}>
+                <SelectTrigger id="game-category"><SelectValue placeholder="Choose a category" /></SelectTrigger>
+                <SelectContent>
+                  {categoryOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  <SelectItem value="__new">+ Add new category…</SelectItem>
+                </SelectContent>
+              </Select>
+              {newCategory && <Input className="mt-2" autoFocus aria-label="New category name" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} />}
+            </div>
             <div><Label>Platform / author</Label><Input value={f.platform} onChange={(e) => setF({ ...f, platform: e.target.value })} /></div>
           </div>
-          <datalist id="arcade-cats">{ARCADE_CATEGORIES.map((c) => <option key={c} value={c} />)}</datalist>
           <div className="grid grid-cols-3 gap-3">
             <div><Label>Difficulty</Label><select className="h-10 w-full rounded-md border border-input bg-background px-2 text-sm" value={f.difficulty} onChange={(e) => setF({ ...f, difficulty: e.target.value })}><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
             <div><Label>Order</Label><Input type="number" value={f.sort_order} onChange={(e) => setF({ ...f, sort_order: Number(e.target.value) })} /></div>
